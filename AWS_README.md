@@ -29,4 +29,4 @@ When the event account provides CLI credentials and the bucket is ready, install
 
 ## Deployment check
 
-After upload, verify that the title screen loads, all CSS and script files load from their folders, each battle continues until seven hits or zero player HP, timed alerts and dodge phases work, progress survives a page refresh, sound can be muted, and no browser console errors appear. The same files should also work when `index.html` is opened locally.
+After upload, verify that the title screen loads, all CSS and script files load from their folders, attack/heal/defend actions work, the enemy uses the same two-HP heal as the player, battles continue until an HP bar reaches zero, progress survives a page refresh, sound can be muted, and no browser console errors appear. The same files should also work when `index.html` is opened locally.

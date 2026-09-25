@@ -60,8 +60,8 @@ def evaluate() -> dict:
     complete = sum([2 if present else 0, 1 if syntax_ok else 0, 2 if combat_ok else 0,
                     2 if screen_ok else 0, 1 if deploy_ok else 0, 2 if direct_file_ok else 0])
     enjoyment = 0.0
-    enjoyment += 2 if all(word in engine for word in ("playerHp", "enemyHp", "hits", "guarded")) else 0
-    enjoyment += 1.5 if all(word in main for word in ("startTimer", "startDodgeTimer", "resolveDodge")) else 0
+    enjoyment += 2 if all(word in engine for word in ("playerHp", "enemyHp", "shieldTurns", "enemyHealUsed")) else 0
+    enjoyment += 1.5 if all(word in main for word in ("startMiniTimer", "miniColor", "miniLane")) else 0
     enjoyment += 1.5 if all(word in ui for word in ("AudioContext", "hit", "hurt", "win", "lose")) else 0
     enjoyment += 1.5 if css.count("@keyframes") >= 10 and "--orange: #ff9900" in css.lower() else 0
     enjoyment += 1 if content.count("question(") >= 60 else 0

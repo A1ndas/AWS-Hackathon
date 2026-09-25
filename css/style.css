@@ -341,6 +341,9 @@ kbd { font: inherit; color: var(--orange-2); background: #263348; border: 1px so
 .impact-hit .rival-card { animation: enemy-hit .55s ease both; }
 .impact-hurt .battle-hud { animation: screen-shake .45s ease both; box-shadow: 0 0 45px rgba(255,56,105,.4); }
 .impact-hit .question-card { box-shadow: 0 0 60px rgba(255,153,0,.45); }
+.impact-player-heal .health-unit:first-child { animation: heal-glow .8s ease both; }
+.impact-enemy-heal .health-unit:last-child { animation: heal-glow .8s ease both; }
+.impact-shield .health-unit:first-child { animation: shield-glow .8s ease both; }
 .feedback-panel.tone-perfect { animation: pop-in .3s ease-out both, battle-pulse 1s .3s ease-in-out 2; }
 .feedback-panel.tone-miss { animation: pop-in .3s ease-out both, screen-shake .4s .3s ease both; }
 .feedback-panel.tone-perfect::before { content: ""; position: absolute; inset: -60%; pointer-events: none; background: conic-gradient(transparent 0 35%, rgba(255,153,0,.12) 45%, transparent 55% 100%); animation: victory-spin 1.5s linear infinite; }
@@ -358,15 +361,65 @@ kbd { font: inherit; color: var(--orange-2); background: #263348; border: 1px so
 .dodge-lane b { font-size: 12px; letter-spacing: .14em; }
 .dodge-lane.danger { border-color: var(--red); background: linear-gradient(150deg, #743448, #321f33); box-shadow: 0 0 35px rgba(255,70,95,.5); animation: danger-flash .5s ease-in-out infinite alternate; }
 .dodge-panel > small { color: var(--muted); }
+.hud-note { display: block; margin-top: 6px; color: #9fc1d3; font-size: 10px; }
+.action-bar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 15px; padding: 10px 14px; border: 1px solid rgba(255,153,0,.35); border-radius: 14px; background: linear-gradient(100deg, #263448, #1d2b3e); box-shadow: 0 0 24px rgba(255,153,0,.08); }
+.action-caption { display: grid; gap: 2px; }
+.action-caption b { color: var(--orange-2); font-size: 11px; letter-spacing: .12em; }
+.action-caption small { color: var(--muted); font-size: 10px; }
+.action-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.attack-action, .action-button { display: inline-flex; align-items: center; gap: 7px; min-height: 43px; padding: 7px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; }
+.attack-action { color: var(--orange-2); border: 1px solid rgba(255,153,0,.4); background: rgba(255,153,0,.09); }
+.action-button { color: #fff; border: 1px solid var(--border); background: #24374a; transition: transform .16s, box-shadow .16s, border-color .16s; }
+.action-button small { color: #b8d1df; font-size: 9px; }
+.action-button:not(:disabled):hover { transform: translateY(-4px); border-color: var(--cyan); box-shadow: 0 0 28px rgba(65,217,255,.23); }
+.heal-action { border-color: rgba(183,243,107,.55); }
+.defend-action { border-color: rgba(65,217,255,.55); }
+.action-button:disabled { opacity: .43; filter: grayscale(.8); }
+.mini-progress { margin: 5px 0; color: var(--orange-2); font-size: 12px; letter-spacing: .16em; font-weight: 900; }
+.memory-preview { display: flex; justify-content: center; gap: 10px; margin: 15px 0 10px; animation: memory-vanish .01s 2s forwards; }
+.memory-chip { padding: 9px 12px; border-radius: 9px; color: #fff; font-size: 11px; font-weight: 950; letter-spacing: .1em; }
+.memory-hidden { color: var(--orange-2) !important; font-weight: 800; }
+.memory-chip.orange, .color-pad.orange { background: #ff9900; }
+.memory-chip.cyan, .color-pad.cyan { background: #1db7df; }
+.memory-chip.violet, .color-pad.violet { background: #9167df; }
+.memory-chip.lime, .color-pad.lime { background: #8bc947; }
+.color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 17px 0; }
+.color-pad { height: 93px; color: #13202b; border: 2px solid rgba(255,255,255,.6); border-radius: 14px; box-shadow: inset 0 5px 15px rgba(255,255,255,.25), 0 10px 25px rgba(0,0,0,.35); transition: transform .15s, filter .15s, box-shadow .15s; }
+.color-pad:hover { transform: translateY(-7px) scale(1.04); filter: brightness(1.25); box-shadow: 0 0 30px rgba(255,255,255,.4); }
+.color-pad b { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.75); }
+@keyframes memory-vanish { to { visibility: hidden; } }
 @keyframes battle-pulse { 50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255,153,0,.8)); } }
 @keyframes card-charge { to { transform: translateY(-5px); filter: brightness(1.2); } }
 @keyframes enemy-hit { 15%, 45% { transform: translateX(-15px) rotate(-4deg); filter: brightness(2); } 30%, 60% { transform: translateX(12px) rotate(3deg); } 100% { transform: none; } }
 @keyframes screen-shake { 15%, 55% { transform: translateX(-7px); } 35%, 75% { transform: translateX(7px); } 100% { transform: none; } }
 @keyframes victory-spin { to { transform: rotate(360deg); } }
 @keyframes danger-flash { to { filter: brightness(1.7); box-shadow: 0 0 55px rgba(255,70,95,.85); } }
+@keyframes heal-glow { 40% { filter: drop-shadow(0 0 22px var(--lime)) brightness(1.35); transform: scale(1.03); } }
+@keyframes shield-glow { 40% { filter: drop-shadow(0 0 22px var(--cyan)) brightness(1.35); transform: scale(1.03); } }
+@media (min-width: 1000px) and (max-height: 800px) {
+  .topbar { height: 62px; }
+  #main-content { padding-bottom: 20px; }
+  .duel-screen { padding-top: 8px; }
+  .duel-head { margin-bottom: 5px; }
+  .battle-hud { margin: 6px 0 8px; padding: 8px 14px; }
+  .health-track { height: 12px; }
+  .question-arena { margin-top: 8px; }
+  .question-card { min-height: 150px; padding: 13px 18px; }
+  .question-card h1 { margin: 8px 0; font-size: 22px; }
+  .rival-face { font-size: 32px; }
+  .action-bar { margin-top: 8px; padding: 6px 10px; }
+  .action-button, .attack-action { min-height: 37px; }
+  .hand-heading { margin: 8px 0 6px; }
+  .battle-hand .answer-card { min-height: 118px; }
+  .battle-hand .card-icon { font-size: 26px; min-height: 29px; }
+  .battle-foot { margin-top: 6px; }
+}
 @media (max-width: 700px) {
   .battle-hud { grid-template-columns: 1fr; gap: 7px; padding: 12px; }
   .versus-mini { display: none; }
   .battle-hand { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .health-label { font-size: 9px; }
+  .action-bar { flex-direction: column; align-items: stretch; }
+  .action-options { justify-content: center; }
+  .color-grid { gap: 5px; }
 }
