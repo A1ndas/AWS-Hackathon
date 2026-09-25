@@ -1,0 +1,25 @@
+{
+  "run": 2,
+  "completeness": 10.0,
+  "enjoyableness_proxy": 8.5,
+  "overall": 9.25,
+  "passes_over_7": true,
+  "stats": {
+    "levels": 6,
+    "questions": 42,
+    "answersPerLevel": [
+      7,
+      7,
+      7,
+      7,
+      7,
+      7
+    ],
+    "winningPaths": 6,
+    "losingPaths": 6,
+    "repeatableAnswers": 42
+  },
+  "screen_flow": "passed",
+  "issues": [],
+  "limit": "Enjoyableness is a feature-based proxy; a real player must judge fun and clarity."
+}

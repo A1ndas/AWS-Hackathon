@@ -1,34 +1,42 @@
-# AWS Card Quest — hackathon plan
+# Question Duel — learn AWS by playing
 
-**Status:** planning only. No game or AWS resources have been built yet.
+A complete, single-player browser game for the AWS hackathon. Read a real-world technology problem, choose one of seven reusable answer cards, and outscore a deterministic bot. Every choice gets a fit score and a short explanation of the best answer.
 
-## Goal
+## Play locally
 
-Build a browser game that teaches beginner to intermediate AWS concepts through four-question lessons and card combat. The playable MVP has five levels, 18 service cards, 20 questions, four combos, and a three-phase final boss. A complete game loop and accurate teaching feedback take priority over visual polish.
+Open `index.html` in a modern desktop browser. There is no install, build step, npm package, server, or AWS account required to play. Progress is saved in `localStorage` where the browser permits it; on restrictive `file:` pages, play still works with session-only progress.
 
-## Technology decision
+## How a duel works
 
-- **Website:** plain HTML, CSS, and vanilla JavaScript. Normal script tags keep `index.html` playable when opened directly and when hosted on Amazon S3.
-- **AWS/Python:** use Python for any later AWS automation or server-side feature. The core game does not need a Python server: combat, lessons, and progress can run in the browser, with progress saved to `localStorage`. This keeps the four-hour MVP small.
-- **Content:** keep card, enemy, combo, level, and quiz text in `data/content.js`. Keep combat rules in `js/engine.js`, separate from the UI.
+- Each of the six levels has **seven question cards and seven answer cards**. The answer cards stay available throughout the duel.
+- Pick the answer that fits the question best. A card may be useful for several questions, but score differently for each one: **Perfect fit**, **Strong fit**, **Works with trade-offs**, **Weak fit**, or **Wrong tool**.
+- PatchBot uses a fixed, preselected answer for each question. The player and bot reveal their choices together; the higher total after seven questions wins.
+- Strong choices build a streak bonus. Feedback explains the strongest fit and links to AWS documentation when the best card is an AWS service.
+- Winning unlocks the next level. The result screen recaps all seven questions. Replaying can improve your best score; losing never erases progress.
 
-## Plan evaluation
+| Level | Icon | Focus |
+| --- | --- | --- |
+| 1. The CD Era | 💿 | Physical media and cloud storage |
+| 2. The USB Crossing | 🔌 | Moving files, DNS, and edge delivery |
+| 3. Disk Drive Dungeon | 💽 | Block storage, databases, caches, and archives |
+| 4. Server Room | 🖥️ | Compute, scaling, APIs, and monitoring |
+| 5. Cloud Control | ☁️ | Permissions, keys, web filtering, and serverless |
+| 6. The Global Grid | 🌐 | A complete global architecture challenge |
 
-The proposed lesson → unlock → combat → map loop is clear and achievable as a focused MVP. Resolve these details before balancing:
+Use the mouse or keys **1–7** to pick cards, and **Enter** to continue after feedback. The sound button mutes the generated effects. Press **D** on the level map to unlock every level for a judge demo; **Reset progress** is on the title screen.
 
-1. **Starting deck and draws:** Level 1 unlocks four distinct cards, but a turn draws five. Define card copies in the fixed deck, and specify whether unplayed cards are discarded at end of turn. A simple rule is a fixed list of card copies per level, discard the whole hand at turn end, and reshuffle the discard pile when needed.
-2. **Costs are illustrative:** AWS prices depend on usage, region, and configuration. Label the `$5` and `$7` turn budgets as *game budget*, with relative card costs rather than claims about actual monthly bills.
-3. **Weaknesses need playable effects:** Type multipliers apply to damage. Give at least one security card a damage effect so the Credential Leak phase can teach its security weakness; block-only security cards would not trigger the stated feedback.
-4. **Combos need to be reachable:** Check that each combo can appear in one hand and its total cost fits a turn's budget. With an 18-card deck and five-card hands, three-card combos may be too rare without extra copies or draw support.
-5. **Progress rules need one definition:** Decide when XP is awarded after a retry, whether a wrong answer resets the streak, and whether a completed lesson stays complete after combat defeat. The requested retry flow suggests saving lesson completion separately from level completion.
-6. **Boss transitions:** Carry player HP into the next phase, then explicitly reset enemy HP, intent position, and turn-only block. Define whether deck, discard, and hand continue or restart at each phase.
-7. **AWS wording:** Describe S3 Glacier as S3 storage classes for long-term data, rather than a separate general-purpose storage service. Say EC2 can run persistent server workloads, not that EC2 is inherently “always on.” IAM controls access; KMS helps manage encryption keys, so their combo should not claim to enable encryption automatically. [AWS S3 Glacier documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/glacier-storage-classes.html)
-8. **Local saves from a file:** Browser behavior for `localStorage` on `file:` URLs is not guaranteed. Catch storage errors so the game remains playable locally, and test saved progress on the hosted site. [MDN localStorage reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
+## Project structure
 
-## Delivery order
+- `data/content.js` — all card, question, score, opponent, and explanation content
+- `js/engine.js` — deterministic duel rules, with no DOM access
+- `js/ui.js`, `js/main.js`, `js/progress.js` — screens, navigation, sound, and local saves
+- `css/style.css` — AWS orange and dark-theme presentation
+- `tools/evaluate_game.py` — separate Python quality evaluator
+- `tools/smoke_ui.js` — screen-flow simulation used by the evaluator
+- `aws/deploy.py` — optional Python uploader for an existing S3 bucket
 
-Follow the proposed six build stages. At the end of each stage, keep `index.html` runnable. Before polish, verify that all five lessons can be completed, combat can be won and lost, retries work, progress reloads correctly, and the boss can be finished from start to end.
+Run the evaluator with `python tools/evaluate_game.py --run 1` (run numbers 1–3 are supported). Reports go to `evaluation/run-N.json`. It checks content, deterministic winning and losing routes, save behavior, and simulated screen flow. The enjoyableness number is a **feature-based proxy**, not a substitute for a human playtest.
 
-## Run locally once built
+## AWS use
 
-Open `index.html` in a modern desktop browser. No install, build step, local server, or Python process should be required. See [AWS_README.md](AWS_README.md) for hosting notes.
+The game teaches AWS services; it does **not** create EC2 instances, databases, or other services represented by its cards. The playable website can be hosted from S3, preferably through CloudFront when account permissions allow it. See [AWS_README.md](AWS_README.md) for the Workshop Studio account checklist and deployment instructions. The game itself needs no backend or credentials.
