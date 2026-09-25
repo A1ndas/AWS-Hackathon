@@ -18,8 +18,9 @@ SITE_FILES = [
     "js/progress.js",
     "js/ui.js",
     "js/main.js",
+    "assets/background.mp3",
 ]
-CONTENT_TYPES = {".html": "text/html", ".css": "text/css", ".js": "text/javascript"}
+CONTENT_TYPES = {".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".mp3": "audio/mpeg"}
 
 
 def main() -> None:
@@ -53,7 +54,7 @@ def main() -> None:
             str(ROOT / name),
             args.bucket,
             name,
-            ExtraArgs={"ContentType": CONTENT_TYPES[suffix] + "; charset=utf-8", "CacheControl": cache},
+            ExtraArgs={"ContentType": CONTENT_TYPES[suffix] + ("; charset=utf-8" if suffix != ".mp3" else ""), "CacheControl": cache},
         )
         print(f"Uploaded s3://{args.bucket}/{name}")
 

@@ -7,9 +7,9 @@
   function startLevel(level) {
     if (!level || !level.questions || !level.answers) throw new Error('A level is required.');
     return { levelId: level.id, turn: 0, attackIndex: 0, hits: 0,
-      enemyHp: 7, enemyMaxHp: 7, enemyHealUsed: false,
-      playerHp: 12, playerMaxHp: 12, playerHealUsed: false,
-      defendUsed: false, shieldTurns: 0, score: 0, streak: 0,
+      enemyHp: 7, enemyMaxHp: 7, lastEnemyHealTurn: -99,
+      playerHp: 12, playerMaxHp: 12, lastPlayerHealTurn: -99,
+      shieldTurns: 0, score: 0, streak: 0,
       history: [], status: 'active', won: false };
   }
   function question(level, state) {
@@ -32,25 +32,21 @@
     return 'deploy';
   }
   function accuracy(level) { return ACCURACY[level.id] || 80; }
+  function healCooldown(state) { return Math.max(0, 3 - (state.turn - state.lastPlayerHealTurn)); }
+  function canHeal(state) { return state.playerHp < state.playerMaxHp && healCooldown(state) === 0; }
+  function canDefend(state) { return state.shieldTurns === 0; }
   function intent(level, state) {
-    if (state.enemyHp <= 2 && !state.enemyHealUsed) {
+    if (state.enemyHp <= 2 && state.turn - state.lastEnemyHealTurn >= 3) {
       return { kind: 'heal', label: 'Repair +2 HP', accuracy: accuracy(level) };
     }
     var hit = (state.turn * 37 + 17) % 100 < accuracy(level);
     return { kind: 'attack', label: 'Attack: up to 2 HP', accuracy: accuracy(level), hit: hit };
   }
-  function healPattern(level, state) {
-    var colors = ['orange', 'cyan', 'violet', 'lime'];
-    var base = (state.turn * 3 + level.id) % 4;
-    return [colors[base], colors[(base + 2) % 4], colors[(base + 1) % 4]];
-  }
-  function dangerLane(level, state, wave) { return (state.turn + level.id + wave * 2) % 3; }
-
   function act(level, state, action) {
     if (!state || state.status !== 'active' || state.levelId !== level.id) throw new Error('Battle is not active.');
     if (!action || ['attack', 'heal', 'defend'].indexOf(action.kind) < 0) throw new Error('Choose an action.');
-    if (action.kind === 'heal' && state.playerHealUsed) throw new Error('Heal already used.');
-    if (action.kind === 'defend' && state.defendUsed) throw new Error('Defense already used.');
+    if (action.kind === 'heal' && !canHeal(state)) throw new Error('Heal is cooling down or health is full.');
+    if (action.kind === 'defend' && !canDefend(state)) throw new Error('Shield is already active.');
     var q = question(level, state), bot = intent(level, state), challenge = mode(level, state);
     var hp = state.playerHp, enemyHp = state.enemyHp, shield = state.shieldTurns;
     var hits = state.hits, attackIndex = state.attackIndex;
@@ -100,13 +96,12 @@
       success: Boolean(action.success), wrongDamage: wrongDamage,
       playerHeal: playerHeal, enemyHeal: enemyHeal, blocked: blocked,
       botDamage: botDamage, botHit: botActed && bot.kind === 'attack' && bot.hit,
-      botActed: botActed, intent: bot };
+      botActed: botActed, intent: bot, failureDetail: action.failureDetail || '' };
     return { levelId: state.levelId, turn: state.turn + 1, attackIndex: attackIndex,
       hits: hits, enemyHp: enemyHp, enemyMaxHp: state.enemyMaxHp,
-      enemyHealUsed: state.enemyHealUsed || enemyHeal > 0,
+      lastEnemyHealTurn: enemyHeal > 0 ? state.turn : state.lastEnemyHealTurn,
       playerHp: hp, playerMaxHp: state.playerMaxHp,
-      playerHealUsed: state.playerHealUsed || action.kind === 'heal',
-      defendUsed: state.defendUsed || action.kind === 'defend',
+      lastPlayerHealTurn: action.kind === 'heal' ? state.turn : state.lastPlayerHealTurn,
       shieldTurns: shield, score: score, streak: streak,
       history: state.history.concat([result]),
       status: finished ? 'complete' : 'active', won: won };
@@ -118,6 +113,6 @@
     return 1;
   }
   window.GameEngine = { startLevel: startLevel, question: question, hand: hand,
-    mode: mode, intent: intent, accuracy: accuracy, healPattern: healPattern,
-    dangerLane: dangerLane, act: act, stars: stars, HEAL: HEAL };
+    mode: mode, intent: intent, accuracy: accuracy, healCooldown: healCooldown,
+    canHeal: canHeal, canDefend: canDefend, act: act, stars: stars, HEAL: HEAL };
 }());

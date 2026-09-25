@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ["index.html", "css/style.css", "data/content.js", "js/engine.js",
-        "js/progress.js", "js/ui.js", "js/main.js"]
+        "js/progress.js", "js/ui.js", "js/main.js", "assets/background.mp3"]
 CHECKS = ["tools/test_combat.js", "tools/smoke_ui.js", "aws/deploy.py"]
 
 
@@ -41,7 +41,7 @@ def evaluate() -> dict:
         issues.append("Screen-flow check failed: " + (screen.stderr.strip() if screen else "files missing"))
     deploy = run([sys.executable, "aws/deploy.py", "--bucket", "example-question-duel",
                   "--region", "eu-west-2", "--dry-run"]) if present else None
-    deploy_ok = deploy is not None and deploy.returncode == 0 and deploy.stdout.count("DRY RUN:") == 7
+    deploy_ok = deploy is not None and deploy.returncode == 0 and deploy.stdout.count("DRY RUN:") == 8
     if not deploy_ok:
         issues.append("S3 deployment dry run failed.")
 
@@ -51,7 +51,7 @@ def evaluate() -> dict:
     main = (ROOT / "js/main.js").read_text(encoding="utf-8") if present else ""
     engine = (ROOT / "js/engine.js").read_text(encoding="utf-8") if present else ""
     content = (ROOT / "data/content.js").read_text(encoding="utf-8") if present else ""
-    order = SITE[2:]
+    order = SITE[2:7]
     scripts_ok = all(name in html for name in order) and [html.index(name) for name in order] == sorted(html.index(name) for name in order)
     direct_file_ok = scripts_ok and 'type="module"' not in html and "fetch(" not in html + ui + main
     if not direct_file_ok:
@@ -60,8 +60,8 @@ def evaluate() -> dict:
     complete = sum([2 if present else 0, 1 if syntax_ok else 0, 2 if combat_ok else 0,
                     2 if screen_ok else 0, 1 if deploy_ok else 0, 2 if direct_file_ok else 0])
     enjoyment = 0.0
-    enjoyment += 2 if all(word in engine for word in ("playerHp", "enemyHp", "shieldTurns", "enemyHealUsed")) else 0
-    enjoyment += 1.5 if all(word in main for word in ("startMiniTimer", "miniColor", "miniLane")) else 0
+    enjoyment += 2 if all(word in engine for word in ("playerHp", "enemyHp", "shieldTurns", "lastEnemyHealTurn")) else 0
+    enjoyment += 1.5 if all(word in main for word in ("startMiniTimer", "miniRepair", "miniDefense")) else 0
     enjoyment += 1.5 if all(word in ui for word in ("AudioContext", "hit", "hurt", "win", "lose")) else 0
     enjoyment += 1.5 if css.count("@keyframes") >= 10 and "--orange: #ff9900" in css.lower() else 0
     enjoyment += 1 if content.count("question(") >= 60 else 0

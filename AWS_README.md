@@ -13,13 +13,13 @@ The game simulates AWS architecture decisions. It needs only website hosting res
 
 ## Recommended website setup
 
-If the event account permits it, upload `index.html`, `css/`, `data/`, and `js/` to an S3 bucket, and serve them through Amazon CloudFront. Use the S3 bucket as a regular S3 origin with CloudFront Origin Access Control so the bucket can stay private. Set `index.html` as CloudFront's default root object. AWS documents this pattern in its [secure static website guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/getting-started-secure-static-website-cloudformation-template.html).
+If the event account permits it, upload `index.html`, `assets/`, `css/`, `data/`, and `js/` to an S3 bucket, and serve them through Amazon CloudFront. Use the S3 bucket as a regular S3 origin with CloudFront Origin Access Control so the bucket can stay private. Set `index.html` as CloudFront's default root object. AWS documents this pattern in its [secure static website guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/getting-started-secure-static-website-cloudformation-template.html).
 
 For a quick hackathon demo, S3 static website hosting is another option **if the event rules allow public bucket reads**: enable static website hosting, set `index.html` as the index document, allow public reads for the site objects, and open the bucket's website endpoint. That endpoint serves **HTTP only**; use CloudFront if the public site needs HTTPS. Follow the [AWS S3 static website tutorial](https://docs.aws.amazon.com/AmazonS3/latest/userguide/HostingWebsiteOnS3Setup.html) for current console steps. If the event account blocks both routes, demonstrate the local game and arrange approved long-term hosting separately.
 
 ## Where Python fits
 
-The website does not require Python to run. `aws/deploy.py` is an optional Python uploader for the seven static site files. It targets an **existing** S3 bucket and does not change bucket access settings. First check the file list without contacting AWS:
+The website does not require Python to run. `aws/deploy.py` is an optional Python uploader for the eight static site files, including the background MP3. It targets an **existing** S3 bucket and does not change bucket access settings. First check the file list without contacting AWS:
 
 ```powershell
 python aws/deploy.py --bucket YOUR_BUCKET --region YOUR_EVENT_REGION --dry-run
@@ -29,4 +29,4 @@ When the event account provides CLI credentials and the bucket is ready, install
 
 ## Deployment check
 
-After upload, verify that the title screen loads, all CSS and script files load from their folders, attack/heal/defend actions work, the enemy uses the same two-HP heal as the player, battles continue until an HP bar reaches zero, progress survives a page refresh, sound can be muted, and no browser console errors appear. The same files should also work when `index.html` is opened locally.
+After upload, verify that the title screen loads, all CSS, script, and MP3 files load from their folders, attack/heal/defend actions work, both sides can heal again after three turns, battles continue until an HP bar reaches zero, progress survives a page refresh, music and effects can be muted, and no browser console errors appear. The same files should also work when `index.html` is opened locally.

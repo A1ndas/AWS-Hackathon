@@ -4,11 +4,15 @@ const app = { innerHTML: '' }, saved = {}, handlers = {};
 let now = 0, nextTimer = 1;
 const intervals = new Map();
 const toast = { textContent: '', classList: { add() {}, remove() {} } };
+const music = { paused: true, volume: 0, playCount: 0, pauseCount: 0,
+  play() { this.paused = false; this.playCount++; return Promise.resolve(); },
+  pause() { this.paused = true; this.pauseCount++; } };
 const document = {
   getElementById(id) {
     if (id === 'app') return app;
     if (id === 'toast') return toast;
     if (id === 'how') return { scrollIntoView() {} };
+    if (id === 'background-music') return music;
     return null;
   },
   querySelector(selector) { return selector === '[data-action="continue"]' ? { focus() {} } : null; },
@@ -53,22 +57,30 @@ function attack(level, index, best) {
 }
 check(app.innerHTML.includes('Learn cloud.'), 'Title missing.');
 click('map'); check(app.innerHTML.includes('Cloud Bootcamp'), 'Map missing.');
+check(music.playCount > 0 && !music.paused, 'Background music did not start on Play.');
+click('sound'); check(music.paused, 'Mute did not pause music.');
+click('sound'); check(!music.paused, 'Unmute did not resume music.');
 click('level', { level: '1' }); click('begin');
 check(app.innerHTML.includes('12/12 HP') && app.innerHTML.includes('action-bar'), 'Three-action HUD missing.');
 const first = window.GAME_CONTENT.levels[0];
 attack(first, 0, true);
-click('heal'); check(app.innerHTML.includes('REPAIR THE CIRCUIT'), 'Heal minigame missing.');
-for (const color of window.GameEngine.healPattern(first, { turn: 1 })) click('mini-color', { color });
+click('heal'); check(app.innerHTML.includes('REBUILD THE SYSTEM'), 'AWS heal minigame missing.');
+for (const step of first.repair.steps) click('mini-repair', { answer: step.id });
 check(app.innerHTML.includes('SYSTEM RESTORED!'), 'Heal success feedback missing.');
 click('continue');
-click('defend'); check(app.innerHTML.includes('RAISE THE SHIELD!'), 'Defense minigame missing.');
-for (let wave = 0; wave < 3; wave++) {
-  const danger = window.GameEngine.dangerLane(first, { turn: 2 }, wave);
-  click('mini-lane', { lane: String((danger + 1) % 3) });
-}
+click('defend'); check(app.innerHTML.includes('COUNTER THE THREAT!'), 'AWS defense minigame missing.');
+for (const wave of first.defense) click('mini-defense', { answer: wave.best });
 check(app.innerHTML.includes('SHIELD ONLINE!'), 'Defense success feedback missing.');
 click('continue');
-for (let i = 1; i < 15 && !app.innerHTML.includes('Enemy defeated!'); i++) attack(first, i, true);
+attack(first, 1, true);
+attack(first, 2, true);
+click('heal'); check(app.innerHTML.includes('REBUILD THE SYSTEM'), 'Heal did not become reusable.');
+for (const step of first.repair.steps) click('mini-repair', { answer: step.id });
+click('continue');
+click('defend'); check(app.innerHTML.includes('COUNTER THE THREAT!'), 'Defense did not become reusable.');
+for (const wave of first.defense) click('mini-defense', { answer: wave.best });
+click('continue');
+for (let i = 3; i < 20 && !app.innerHTML.includes('Enemy defeated!'); i++) attack(first, i, true);
 check(app.innerHTML.includes('Enemy defeated!'), 'Level one victory missing.');
 check(sawBotHeal, 'Enemy did not use the same two-HP heal.');
 check(window.GameProgress.load().unlocked === 2, 'Level unlock missing.');
@@ -83,22 +95,22 @@ check(window.GameProgress.load().completed['6'], 'Final save missing.');
 click('retry');
 attack(boss, 0, false);
 click('heal');
-const badColor = ['orange', 'cyan', 'violet', 'lime'].find(color => color !== window.GameEngine.healPattern(boss, { turn: 1 })[0]);
-click('mini-color', { color: badColor });
+const badRepair = boss.repair.steps.find(step => step.id !== boss.repair.steps[0].id);
+click('mini-repair', { answer: badRepair.id });
 check(app.innerHTML.includes('REPAIR FAILED!'), 'Heal failure feedback missing.');
 click('continue');
 click('defend');
-click('mini-lane', { lane: String(window.GameEngine.dangerLane(boss, { turn: 2 }, 0)) });
+click('mini-defense', { answer: boss.defense[0].options.find(id => id !== boss.defense[0].best) });
 check(app.innerHTML.includes('SHIELD FAILED!'), 'Defense failure feedback missing.');
 click('continue');
 for (let i = 1; i < 20 && !app.innerHTML.includes('You fell in battle'); i++) attack(boss, i, false);
 check(app.innerHTML.includes('You fell in battle'), 'Defeat missing.');
 click('retry'); check(app.innerHTML.includes('action-bar'), 'Retry missing.');
 attack(boss, 0, true);
-click('heal'); tick(9001);
+click('heal'); tick(14001);
 check(app.innerHTML.includes('REPAIR FAILED!'), 'Heal timeout missing.');
 click('continue');
-click('defend'); tick(7001);
+click('defend'); tick(12001);
 check(app.innerHTML.includes('SHIELD FAILED!'), 'Defense timeout missing.');
 click('continue');
 attack(boss, 1, true);

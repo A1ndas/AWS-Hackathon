@@ -38,6 +38,16 @@
       {
         id: 1, name: "Cloud Bootcamp", icon: "💿", theme: "AWS essentials", enemy: "Cloud Confuser", enemyIcon: "📀",
         intro: "Meet the core building blocks: files, servers, code, databases, access, delivery, and monitoring.",
+        repair: { title: "Restore a simple web app", steps: [
+          { id: "cloudwatch", clue: "First, check metrics and alarms to spot the failure." },
+          { id: "ec2", clue: "Next, run the replacement virtual server." },
+          { id: "s3", clue: "Finally, retrieve the site's stored image objects." }
+        ] },
+        defense: [
+          { prompt: "An unknown identity requests your files. What controls access?", options: ["s3", "iam", "ec2"], best: "iam", why: "IAM manages access permissions." },
+          { prompt: "An error alarm fires. What shows app metrics?", options: ["lambda", "rds", "cloudwatch"], best: "cloudwatch", why: "CloudWatch collects metrics and alarms." },
+          { prompt: "Site images need object storage. What holds them?", options: ["ec2", "s3", "rds"], best: "s3", why: "S3 stores image objects." }
+        ],
         answers: ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"],
         questions: [
           question("1a", "A website needs to store uploaded photos. Which service stores the image objects?", "s3", "ec2", [100, 30, 10, 20, 0, 45, 0], "Amazon S3 stores objects such as photos in buckets.", "Store files"),
@@ -55,6 +65,16 @@
       {
         id: 2, name: "Connected Cloud", icon: "🔌", theme: "Networks and traffic", enemy: "Cable Gremlin", enemyIcon: "👾",
         intro: "Learn how apps connect: networks, domain names, APIs, traffic distribution, and global delivery.",
+        repair: { title: "Reconnect a busy website", steps: [
+          { id: "route53", clue: "First, resolve the site's domain name." },
+          { id: "alb", clue: "Next, distribute HTTP requests among targets." },
+          { id: "autoscaling", clue: "Finally, adjust the EC2 fleet as demand changes." }
+        ] },
+        defense: [
+          { prompt: "App resources need a private virtual network. Choose it.", options: ["vpc", "s3", "route53"], best: "vpc", why: "VPC defines a logically isolated network." },
+          { prompt: "Worldwide users wait on images. Choose edge caching.", options: ["alb", "cloudfront", "vpc"], best: "cloudfront", why: "CloudFront can cache content near users." },
+          { prompt: "A mobile app needs a managed API front door. Choose it.", options: ["route53", "s3", "apigateway"], best: "apigateway", why: "API Gateway creates and manages APIs." }
+        ],
         answers: ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"],
         questions: [
           question("2a", "Your AWS resources need a logically isolated virtual network. What do you create?", "vpc", "route53", [100, 20, 0, 20, 0, 0, 0], "A VPC defines a logically isolated network for AWS resources.", "Virtual network"),
@@ -72,6 +92,16 @@
       {
         id: 3, name: "Disk Drive Dungeon", icon: "💽", theme: "Data has a shape", enemy: "Query Slime", enemyIcon: "🟣",
         intro: "A disk, database, cache, and archive solve different data problems. Read the workload before choosing.",
+        repair: { title: "Rebuild a data path", steps: [
+          { id: "rds", clue: "First, restore the relational data source." },
+          { id: "elasticache", clue: "Next, cache frequently read data in memory." },
+          { id: "s3", clue: "Finally, keep backup files as objects." }
+        ] },
+        defense: [
+          { prompt: "Orders use SQL joins. Which managed database fits?", options: ["rds", "s3", "elasticache"], best: "rds", why: "RDS runs relational database engines." },
+          { prompt: "Profiles need key-value lookup. Choose the NoSQL store.", options: ["ebs", "dynamodb", "rds"], best: "dynamodb", why: "DynamoDB supports key-value data." },
+          { prompt: "Old backups can wait to be restored. Choose an archive class.", options: ["s3", "elasticache", "glacier"], best: "glacier", why: "S3 Glacier Flexible Retrieval is for infrequently accessed archives." }
+        ],
         answers: ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"],
         questions: [
           question("3a", "An offline desktop needs a large local drive for files. What is the direct answer?", "hdd", "ebs", [100, 55, 30, 20, 20, 35, 10], "A hard drive stores local files; EBS plays a block-storage role for EC2 in AWS.", "Local disk"),
@@ -89,6 +119,16 @@
       {
         id: 4, name: "Server Room", icon: "🖥️", theme: "Work gets done", enemy: "Traffic Troll", enemyIcon: "👹",
         intro: "Compute, scaling, routing, and monitoring are teammates. Pick the one that directly solves the prompt.",
+        repair: { title: "Recover a busy application", steps: [
+          { id: "cloudwatch", clue: "First, find the traffic spike in metrics." },
+          { id: "autoscaling", clue: "Next, adjust the number of EC2 instances." },
+          { id: "alb", clue: "Finally, spread HTTP requests among targets." }
+        ] },
+        defense: [
+          { prompt: "EC2 instance count must grow with demand. Choose it.", options: ["ec2", "autoscaling", "vpc"], best: "autoscaling", why: "EC2 Auto Scaling adjusts instance count." },
+          { prompt: "HTTP requests need healthy targets. Choose the balancer.", options: ["apigateway", "cloudwatch", "alb"], best: "alb", why: "An ALB distributes HTTP and HTTPS requests." },
+          { prompt: "Error metrics need an alarm. Choose visibility.", options: ["cloudwatch", "lambda", "vpc"], best: "cloudwatch", why: "CloudWatch provides metrics and alarms." }
+        ],
         answers: ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"],
         questions: [
           question("4a", "You need a configurable virtual server for a long-running custom application. Choose it.", "ec2", "autoscaling", [100, 30, 60, 30, 20, 10, 25], "EC2 gives you virtual servers; Auto Scaling can later adjust how many EC2 instances run.", "Virtual servers"),
@@ -106,6 +146,16 @@
       {
         id: 5, name: "Cloud Control", icon: "☁️", theme: "Guard and automate", enemy: "Permission Phantom", enemyIcon: "👻",
         intro: "Secure access, manage keys, filter web traffic, and connect serverless pieces.",
+        repair: { title: "Restore a secured API", steps: [
+          { id: "iam", clue: "First, review who is allowed to access resources." },
+          { id: "waf", clue: "Next, filter unwanted HTTP requests." },
+          { id: "cloudwatch", clue: "Finally, watch error metrics and alarms." }
+        ] },
+        defense: [
+          { prompt: "A role has too much access. Which service controls permissions?", options: ["kms", "iam", "waf"], best: "iam", why: "IAM policies control permissions." },
+          { prompt: "Unwanted HTTP requests reach your app. Choose the web filter.", options: ["cloudwatch", "waf", "iam"], best: "waf", why: "AWS WAF filters web requests." },
+          { prompt: "You need to manage encryption keys. Choose the key service.", options: ["kms", "iam", "dynamodb"], best: "kms", why: "KMS manages keys for supported encryption workflows." }
+        ],
         answers: ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"],
         questions: [
           question("5a", "Decide which application role may read an S3 bucket. What controls permissions?", "iam", "kms", [100, 40, 20, 10, 10, 5, 15], "IAM policies and roles control access to AWS resources; KMS concerns encryption keys.", "Permissions"),
@@ -123,6 +173,16 @@
       {
         id: 6, name: "The Global Grid", icon: "🌐", theme: "Final architecture", enemy: "Latency Leviathan", enemyIcon: "🐉",
         intro: "The final duel combines delivery, routing, scaling, storage, networking, and protection.",
+        repair: { title: "Reconnect a global static site", steps: [
+          { id: "route53", clue: "First, resolve the visitor's domain name." },
+          { id: "cloudfront", clue: "Next, deliver cached content from edge locations." },
+          { id: "s3", clue: "Finally, reach the original stored site objects when needed." }
+        ] },
+        defense: [
+          { prompt: "A global audience needs nearby cached images. Choose it.", options: ["s3", "cloudfront", "alb"], best: "cloudfront", why: "CloudFront caches content near viewers." },
+          { prompt: "The EC2 fleet needs more instances. Choose the scaler.", options: ["route53", "autoscaling", "vpc"], best: "autoscaling", why: "EC2 Auto Scaling adjusts fleet size." },
+          { prompt: "Suspicious HTTP requests need filtering. Choose it.", options: ["alb", "s3", "waf"], best: "waf", why: "AWS WAF applies web-request rules." }
+        ],
         answers: ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"],
         questions: [
           question("6a", "A global audience needs site images cached near viewers. Pick the edge service.", "cloudfront", "s3", [100, 55, 35, 25, 70, 15, 20], "CloudFront uses edge locations for lower-latency delivery; S3 can hold the original images.", "Global delivery"),

@@ -28,7 +28,7 @@
     }, 100);
   }
   function startMiniTimer() {
-    stopTimer(); deadline = Date.now() + (mini.kind === 'heal' ? 9000 : 7000);
+    stopTimer(); deadline = Date.now() + (mini.kind === 'heal' ? 14000 : 12000);
     timer = window.setInterval(function () {
       var left = Math.max(0, deadline - Date.now());
       var label = document.getElementById('mini-time');
@@ -36,7 +36,7 @@
       if (left <= 0) finishMini(false);
     }, 100);
   }
-  function map() { stopTimer(); screen = 'map'; review = null; pick = null; mini = null; draw(); }
+  function map() { stopTimer(); screen = 'map'; review = null; pick = null; mini = null; draw(); ui.music(progress.sound); }
   function chooseLevel(id) {
     if (id < 1 || id > progress.unlocked) return;
     stopTimer(); level = content.levels[id - 1]; duel = null; review = null;
@@ -44,7 +44,7 @@
   }
   function begin() {
     stopTimer(); duel = engine.startLevel(level); review = null; pick = null; mini = null;
-    screen = 'duel'; draw(); ui.sound('start', progress.sound); startAttackTimer();
+    screen = 'duel'; draw(); ui.music(progress.sound); ui.sound('start', progress.sound); startAttackTimer();
   }
   function resolve(action) {
     stopTimer(); mini = null; pick = null;
@@ -77,27 +77,36 @@
   }
   function startMini(kind) {
     if (screen !== 'duel' || review || mini || duel.status !== 'active') return;
-    if (kind === 'heal' && duel.playerHealUsed || kind === 'defend' && duel.defendUsed) return;
+    if (kind === 'heal' && !engine.canHeal(duel) || kind === 'defend' && !engine.canDefend(duel)) return;
     stopTimer(); pick = null;
-    mini = kind === 'heal' ? { kind: kind, step: 0, sequence: engine.healPattern(level, duel) } :
-      { kind: kind, step: 0 };
+    mini = { kind: kind, step: 0 };
     draw(); ui.sound('start', progress.sound); startMiniTimer();
   }
   function finishMini(success) {
     if (!mini) return;
-    var kind = mini.kind;
-    resolve({ kind: kind, success: Boolean(success) });
+    var kind = mini.kind, detail = '';
+    if (!success) {
+      if (kind === 'heal') {
+        var step = level.repair.steps[mini.step];
+        detail = step.clue + ' Best: ' + content.cards[step.id].name + '.';
+      } else detail = level.defense[mini.step].why;
+    }
+    resolve({ kind: kind, success: Boolean(success), failureDetail: detail });
   }
-  function miniColor(color) {
+  function repairOptions() {
+    var steps = level.repair.steps;
+    return [steps[1].id, steps[2].id, steps[0].id];
+  }
+  function miniRepair(id) {
     if (!mini || mini.kind !== 'heal') return;
-    if (color !== mini.sequence[mini.step]) { finishMini(false); return; }
+    if (id !== level.repair.steps[mini.step].id) { finishMini(false); return; }
     mini.step++;
     if (mini.step === 3) { finishMini(true); return; }
     ui.sound('pick', progress.sound); draw();
   }
-  function miniLane(lane) {
+  function miniDefense(id) {
     if (!mini || mini.kind !== 'defend') return;
-    if (lane === engine.dangerLane(level, duel, mini.step)) { finishMini(false); return; }
+    if (id !== level.defense[mini.step].best) { finishMini(false); return; }
     mini.step++;
     if (mini.step === 3) { finishMini(true); return; }
     ui.sound('shield', progress.sound); draw();
@@ -122,13 +131,13 @@
     else if (action === 'begin' || action === 'retry') begin();
     else if (action === 'answer') playAnswer(control.dataset.answer, false);
     else if (action === 'heal' || action === 'defend') startMini(action);
-    else if (action === 'mini-color') miniColor(control.dataset.color);
-    else if (action === 'mini-lane') miniLane(Number(control.dataset.lane));
+    else if (action === 'mini-repair') miniRepair(control.dataset.answer);
+    else if (action === 'mini-defense') miniDefense(control.dataset.answer);
     else if (action === 'continue') continueDuel();
     else if (action === 'next-level') chooseLevel(level.id + 1);
-    else if (action === 'sound') { progress = progressApi.setSound(progress, !progress.sound); draw(); }
+    else if (action === 'sound') { progress = progressApi.setSound(progress, !progress.sound); ui.music(progress.sound); draw(); }
     else if (action === 'reset' && window.confirm('Reset all saved Question Duel progress?')) {
-      stopTimer(); progress = progressApi.reset(); screen = 'title'; draw(); ui.toast('Progress reset.');
+      stopTimer(); ui.music(false); progress = progressApi.reset(); screen = 'title'; draw(); ui.toast('Progress reset.');
     }
   });
   document.addEventListener('keydown', function (event) {
@@ -140,10 +149,10 @@
     if (screen === 'duel' && review && event.key === 'Enter') {
       event.preventDefault(); continueDuel(); return;
     }
-    if (screen === 'duel' && mini && /^[1-4]$/.test(event.key)) {
+    if (screen === 'duel' && mini && /^[1-3]$/.test(event.key)) {
       event.preventDefault();
-      if (mini.kind === 'heal') miniColor(['orange', 'cyan', 'violet', 'lime'][Number(event.key) - 1]);
-      else if (Number(event.key) <= 3) miniLane(Number(event.key) - 1);
+      if (mini.kind === 'heal') miniRepair(repairOptions()[Number(event.key) - 1]);
+      else miniDefense(level.defense[mini.step].options[Number(event.key) - 1]);
       return;
     }
     if (screen === 'duel' && !review && !mini && /^[1-4]$/.test(event.key)) {
