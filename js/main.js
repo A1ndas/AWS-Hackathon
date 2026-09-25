@@ -108,7 +108,6 @@
     resolve({ kind: kind, success: Boolean(success), failureDetail: detail });
   }
   function repairOptions() {
-    var steps = level.repair.steps;
     return level.repair.options;
   }
   function miniRepair(id) {

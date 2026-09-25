@@ -42,14 +42,39 @@ function click(action, data = {}) {
 function key(value) { handlers.keydown({ key: value, preventDefault() {} }); }
 function tick(milliseconds) { now += milliseconds; for (const callback of [...intervals.values()]) callback(); }
 let sawBotHeal = false;
+function unesc(text) {
+  return text.replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+}
+function domCards() {
+  return [...app.innerHTML.matchAll(/data-action="answer" data-answer="([^"]+)"/g)].map(match => match[1]);
+}
+function currentQuestion(level) {
+  const heading = (app.innerHTML.match(/<h1>([\s\S]*?)<\/h1>/) || [])[1];
+  return level.questions.find(item => item.prompt === unesc(heading || ''));
+}
+/* Drives whatever challenge the duel is showing: deploy, build, timed, or match. */
 function attack(level, index, best) {
-  const snapshot = { attackIndex: index };
-  const q = level.questions[index % level.questions.length];
-  const hand = window.GameEngine.hand(level, snapshot);
-  const main = best ? q.best : hand.find(id => id !== q.best && id !== q.support);
-  click('answer', { answer: main });
-  if (window.GameEngine.mode(level, snapshot) === 'build') {
-    click('answer', { answer: best ? q.support : hand.find(id => id !== main) });
+  const html = app.innerHTML, hand = domCards();
+  if (html.includes('match-prompts')) {
+    const prompts = [...html.matchAll(/<li[^>]*><span>\d+<\/span><p>([\s\S]*?)<\/p>/g)].map(match => unesc(match[1]));
+    check(prompts.length === 4, `Match prompts missing at ${index}.`);
+    for (const prompt of prompts) {
+      const question = level.questions.find(item => item.prompt === prompt);
+      check(question, `Match prompt not found at ${index}: ${prompt}`);
+      click('answer', { answer: question.best });
+    }
+  } else {
+    const question = currentQuestion(level);
+    check(question, `Question missing at ${index}.`);
+    const main = best ? question.best : hand.find(id => id !== question.best && id !== question.support);
+    check(main && hand.includes(main), `Attack card missing at ${index}.`);
+    click('answer', { answer: main });
+    if (html.includes('BUILD A FIX')) {
+      const support = best ? question.support : hand.find(id => id !== main);
+      check(support && support !== main, `Support card missing at ${index}.`);
+      click('answer', { answer: support });
+    }
   }
   check(app.innerHTML.includes('feedback-panel'), `Attack feedback missing at ${index}`);
   if (app.innerHTML.includes('Repaired +2 HP')) sawBotHeal = true;
@@ -107,13 +132,13 @@ for (let i = 1; i < 20 && !app.innerHTML.includes('You fell in battle'); i++) at
 check(app.innerHTML.includes('You fell in battle'), 'Defeat missing.');
 click('retry'); check(app.innerHTML.includes('action-bar'), 'Retry missing.');
 attack(boss, 0, true);
-click('heal'); tick(14001);
+attack(boss, 1, true);
+click('heal'); tick(18001);
 check(app.innerHTML.includes('REPAIR FAILED!'), 'Heal timeout missing.');
 click('continue');
-click('defend'); tick(12001);
+click('defend'); tick(16001);
 check(app.innerHTML.includes('SHIELD FAILED!'), 'Defense timeout missing.');
 click('continue');
-attack(boss, 1, true);
 tick(12001);
 check(app.innerHTML.includes('TIME OUT!'), 'Timed attack timeout missing.');
 click('home'); click('reset');

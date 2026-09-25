@@ -37,6 +37,8 @@
     return { questions: found, answers: answers.slice(shift).concat(answers.slice(0, shift)), advance: scanned };
   }
   function hand(level, state) {
+    /* Match turns must offer exactly the four cards the prompts demand. */
+    if (mode(level, state) === 'match') return matchPairs(level, state).answers;
     var q = question(level, state), chosen = [q.best];
     if (q.support && q.support !== q.best) chosen.push(q.support);
     var start = (state.attackIndex * 3 + level.id) % level.answers.length;
