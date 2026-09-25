@@ -4,16 +4,37 @@
   var ACCURACY = [0, 35, 42, 49, 56, 63, 70];
   var HEAL = 2;
 
-  function startLevel(level) {
+  function startLevel(level, seenIds) {
     if (!level || !level.questions || !level.answers) throw new Error('A level is required.');
-    return { levelId: level.id, turn: 0, attackIndex: 0, hits: 0,
+    var seen = Array.isArray(seenIds) ? seenIds : [];
+    var order = level.questions.filter(function (q) { return seen.indexOf(q.id) < 0; })
+      .concat(level.questions.filter(function (q) { return seen.indexOf(q.id) >= 0; }))
+      .map(function (q) { return q.id; });
+    return { levelId: level.id, turn: 0, attackIndex: 0, questionCursor: 0, questionOrder: order, hits: 0,
       enemyHp: 7, enemyMaxHp: 7, lastEnemyHealTurn: -99,
       playerHp: 12, playerMaxHp: 12, lastPlayerHealTurn: -99,
       shieldTurns: 0, score: 0, streak: 0,
       history: [], status: 'active', won: false };
   }
   function question(level, state) {
-    return level.questions[state.attackIndex % level.questions.length];
+    var order = state.questionOrder || level.questions.map(function (q) { return q.id; });
+    var cursor = state.questionCursor === undefined ? state.attackIndex : state.questionCursor;
+    var id = order[cursor % order.length];
+    return level.questions.filter(function (q) { return q.id === id; })[0];
+  }
+  function matchPairs(level, state) {
+    var order = state.questionOrder || level.questions.map(function (q) { return q.id; });
+    var cursor = state.questionCursor === undefined ? state.attackIndex : state.questionCursor;
+    var found = [], answers = [], scanned = 0;
+    while (found.length < 4 && scanned < order.length) {
+      var id = order[(cursor + scanned) % order.length];
+      var q = level.questions.filter(function (item) { return item.id === id; })[0];
+      scanned++;
+      if (answers.indexOf(q.best) < 0) { found.push(q); answers.push(q.best); }
+    }
+    if (found.length < 4) throw new Error('Matching needs four different answers.');
+    var shift = state.attackIndex % 4;
+    return { questions: found, answers: answers.slice(shift).concat(answers.slice(0, shift)), advance: scanned };
   }
   function hand(level, state) {
     var q = question(level, state), chosen = [q.best];
@@ -27,6 +48,7 @@
     return chosen.slice(shift).concat(chosen.slice(0, shift));
   }
   function mode(level, state) {
+    if (state.attackIndex % 5 === 4) return 'match';
     if (level.id >= 5 && state.attackIndex % 4 === 3 && question(level, state).support) return 'build';
     if (level.id >= 4 && state.attackIndex % 4 === 2) return 'timed';
     return 'deploy';
@@ -44,16 +66,31 @@
   }
   function act(level, state, action) {
     if (!state || state.status !== 'active' || state.levelId !== level.id) throw new Error('Battle is not active.');
-    if (!action || ['attack', 'heal', 'defend'].indexOf(action.kind) < 0) throw new Error('Choose an action.');
+    if (!action || ['attack', 'match', 'heal', 'defend'].indexOf(action.kind) < 0) throw new Error('Choose an action.');
     if (action.kind === 'heal' && !canHeal(state)) throw new Error('Heal is cooling down or health is full.');
     if (action.kind === 'defend' && !canDefend(state)) throw new Error('Shield is already active.');
     var q = question(level, state), bot = intent(level, state), challenge = mode(level, state);
     var hp = state.playerHp, enemyHp = state.enemyHp, shield = state.shieldTurns;
-    var hits = state.hits, attackIndex = state.attackIndex;
+    var hits = state.hits, attackIndex = state.attackIndex, questionCursor = state.questionCursor;
     var score = state.score, streak = state.streak;
     var quality = 0, best = false, combo = false, wrongDamage = 0;
     var playerHeal = 0, enemyHeal = 0, blocked = 0, botDamage = 0;
-    if (action.kind === 'attack') {
+    var matched = null, matchCorrect = 0;
+    if (action.kind === 'match') {
+      if (challenge !== 'match') throw new Error('This turn is not a match challenge.');
+      matched = matchPairs(level, state);
+      if (!Array.isArray(action.matches) || action.matches.length !== 4 ||
+          action.matches.some(function (id) { return matched.answers.indexOf(id) < 0; }) ||
+          new Set(action.matches).size !== 4) throw new Error('Choose each matching card once.');
+      matchCorrect = matched.questions.reduce(function (sum, item, i) {
+        return sum + (item.best === action.matches[i] ? 1 : 0);
+      }, 0);
+      best = matchCorrect === 4; quality = matchCorrect * 25;
+      if (best) { enemyHp--; hits++; score += 160; streak++; }
+      else { wrongDamage = 2; hp -= wrongDamage; streak = 0; }
+      attackIndex++; questionCursor += matched.advance;
+    } else if (action.kind === 'attack') {
+      if (challenge === 'match') throw new Error('Match the four prompts this turn.');
       var visible = hand(level, state);
       if (!action.timedOut && visible.indexOf(action.answerId) < 0) throw new Error('Card is not in this hand.');
       if (challenge === 'build' && !action.timedOut &&
@@ -65,7 +102,7 @@
       combo = best && challenge === 'build' && action.supportId === q.support;
       if (best) { enemyHp--; hits++; score += 100 + (combo ? 30 : 0); streak++; }
       else { wrongDamage = action.timedOut ? 3 : quality >= 60 ? 0 : 2; hp -= wrongDamage; streak = 0; }
-      attackIndex++;
+      attackIndex++; questionCursor++;
     } else if (action.kind === 'heal') {
       if (action.success) { playerHeal = Math.min(HEAL, state.playerMaxHp - hp); hp += playerHeal; }
     } else if (action.success) shield = 3;
@@ -89,7 +126,9 @@
     var won = enemyHp === 0 && hp > 0;
     var finished = won || hp === 0;
     var result = { turn: state.turn, kind: action.kind,
-      questionIndex: action.kind === 'attack' ? state.attackIndex % level.questions.length : null,
+      questionIndex: action.kind === 'attack' ? level.questions.indexOf(q) : null,
+      matchIds: matched ? matched.questions.map(function (item) { return item.id; }) : null,
+      matchAnswers: matched ? action.matches.slice() : null, matchCorrect: matchCorrect,
       answerId: action.answerId || null, supportId: action.supportId || null,
       bestId: action.kind === 'attack' ? q.best : null, mode: challenge,
       hit: best, combo: combo, quality: quality, timedOut: Boolean(action.timedOut),
@@ -98,6 +137,7 @@
       botDamage: botDamage, botHit: botActed && bot.kind === 'attack' && bot.hit,
       botActed: botActed, intent: bot, failureDetail: action.failureDetail || '' };
     return { levelId: state.levelId, turn: state.turn + 1, attackIndex: attackIndex,
+      questionCursor: questionCursor, questionOrder: state.questionOrder,
       hits: hits, enemyHp: enemyHp, enemyMaxHp: state.enemyMaxHp,
       lastEnemyHealTurn: enemyHeal > 0 ? state.turn : state.lastEnemyHealTurn,
       playerHp: hp, playerMaxHp: state.playerMaxHp,
@@ -112,7 +152,7 @@
     if (state.playerHp >= 5) return 2;
     return 1;
   }
-  window.GameEngine = { startLevel: startLevel, question: question, hand: hand,
+  window.GameEngine = { startLevel: startLevel, question: question, matchPairs: matchPairs, hand: hand,
     mode: mode, intent: intent, accuracy: accuracy, healCooldown: healCooldown,
     canHeal: canHeal, canDefend: canDefend, act: act, stars: stars, HEAL: HEAL };
 }());

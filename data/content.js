@@ -5,6 +5,11 @@
   function question(id, prompt, best, rival, scores, why, topic, support) {
     return { id: id, prompt: prompt, best: best, rival: rival, scores: scores, why: why, topic: topic, support: support || null };
   }
+  function extra(id, prompt, best, rival, answers, why, topic) {
+    return question(id, prompt, best, rival, answers.map(function (answer) {
+      return answer === best ? 100 : answer === rival ? 55 : 15;
+    }), why, topic);
+  }
 
   window.GAME_CONTENT = {
     title: "Question Duel",
@@ -38,15 +43,15 @@
       {
         id: 1, name: "Cloud Bootcamp", icon: "💿", theme: "AWS essentials", enemy: "Cloud Confuser", enemyIcon: "📀",
         intro: "Meet the core building blocks: files, servers, code, databases, access, delivery, and monitoring.",
-        repair: { title: "Restore a simple web app", steps: [
+        repair: { title: "Restore a simple web app", options: ["cloudwatch", "ec2", "s3", "iam", "rds"], steps: [
           { id: "cloudwatch", clue: "First, check metrics and alarms to spot the failure." },
           { id: "ec2", clue: "Next, run the replacement virtual server." },
           { id: "s3", clue: "Finally, retrieve the site's stored image objects." }
         ] },
         defense: [
-          { prompt: "An unknown identity requests your files. What controls access?", options: ["s3", "iam", "ec2"], best: "iam", why: "IAM manages access permissions." },
-          { prompt: "An error alarm fires. What shows app metrics?", options: ["lambda", "rds", "cloudwatch"], best: "cloudwatch", why: "CloudWatch collects metrics and alarms." },
-          { prompt: "Site images need object storage. What holds them?", options: ["ec2", "s3", "rds"], best: "s3", why: "S3 stores image objects." }
+          { prompt: "An unknown identity requests your files. What controls access?", options: ["s3", "iam", "ec2", "rds", "cloudwatch"], best: "iam", why: "IAM manages access permissions." },
+          { prompt: "An error alarm fires. What shows app metrics?", options: ["lambda", "rds", "cloudwatch", "s3", "ec2"], best: "cloudwatch", why: "CloudWatch collects metrics and alarms." },
+          { prompt: "Site images need object storage. What holds them?", options: ["ec2", "s3", "rds", "iam", "lambda"], best: "s3", why: "S3 stores image objects." }
         ],
         answers: ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"],
         questions: [
@@ -59,21 +64,27 @@
           question("1g", "You want metrics and alarms to spot an unhealthy app. Which service helps?", "cloudwatch", "ec2", [0, 20, 20, 0, 0, 0, 100], "CloudWatch collects metrics and can raise alarms.", "Observe"),
           question("1h", "A team wants to host a long-running application on a configurable AWS machine. Choose it.", "ec2", "rds", [10, 100, 45, 25, 0, 0, 15], "EC2 is the virtual server; RDS is for relational databases.", "Compute"),
           question("1i", "A developer needs a place for static site files before delivering them worldwide. Pick the store.", "s3", "cloudfront", [100, 5, 0, 0, 0, 65, 0], "S3 can store static site objects while CloudFront delivers them.", "Website files"),
-          question("1j", "A new teammate should get only the AWS permissions required for their job. What manages that?", "iam", "cloudwatch", [0, 0, 0, 0, 100, 0, 15], "IAM policies grant permissions to identities and roles.", "Least privilege")
+          question("1j", "A new teammate should get only the AWS permissions required for their job. What manages that?", "iam", "cloudwatch", [0, 0, 0, 0, 100, 0, 15], "IAM policies grant permissions to identities and roles.", "Least privilege"),
+          extra("1k", "A designer uploads a banner image. Which service holds the file as an object?", "s3", "ec2", ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"], "S3 stores uploaded files as objects.", "Objects"),
+          extra("1l", "A long-running program needs an AWS virtual machine. Which service runs it?", "ec2", "lambda", ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"], "EC2 provides configurable virtual servers.", "Virtual machine"),
+          extra("1m", "A brief job runs only when a file arrives. Which service runs event-driven code?", "lambda", "ec2", ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"], "Lambda runs code in response to events.", "Events"),
+          extra("1n", "A shop needs tables of customer orders in a managed database. Choose it.", "rds", "s3", ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"], "RDS operates relational database engines.", "Tables"),
+          extra("1o", "A new employee needs read access to one resource. Where do you set permissions?", "iam", "cloudwatch", ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"], "IAM policies set AWS access permissions.", "Identity"),
+          extra("1p", "You need an alarm when app errors rise. Which service monitors metrics?", "cloudwatch", "rds", ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"], "CloudWatch monitors metrics and can raise alarms.", "Alarms")
         ]
       },
       {
         id: 2, name: "Connected Cloud", icon: "🔌", theme: "Networks and traffic", enemy: "Cable Gremlin", enemyIcon: "👾",
         intro: "Learn how apps connect: networks, domain names, APIs, traffic distribution, and global delivery.",
-        repair: { title: "Reconnect a busy website", steps: [
+        repair: { title: "Reconnect a busy website", options: ["route53", "alb", "autoscaling", "vpc", "cloudfront"], steps: [
           { id: "route53", clue: "First, resolve the site's domain name." },
           { id: "alb", clue: "Next, distribute HTTP requests among targets." },
           { id: "autoscaling", clue: "Finally, adjust the EC2 fleet as demand changes." }
         ] },
         defense: [
-          { prompt: "App resources need a private virtual network. Choose it.", options: ["vpc", "s3", "route53"], best: "vpc", why: "VPC defines a logically isolated network." },
-          { prompt: "Worldwide users wait on images. Choose edge caching.", options: ["alb", "cloudfront", "vpc"], best: "cloudfront", why: "CloudFront can cache content near users." },
-          { prompt: "A mobile app needs a managed API front door. Choose it.", options: ["route53", "s3", "apigateway"], best: "apigateway", why: "API Gateway creates and manages APIs." }
+          { prompt: "App resources need a private virtual network. Choose it.", options: ["vpc", "s3", "route53", "alb", "cloudfront"], best: "vpc", why: "VPC defines a logically isolated network." },
+          { prompt: "Worldwide users wait on images. Choose edge caching.", options: ["alb", "cloudfront", "vpc", "s3", "route53"], best: "cloudfront", why: "CloudFront can cache content near users." },
+          { prompt: "A mobile app needs a managed API front door. Choose it.", options: ["route53", "s3", "apigateway", "vpc", "alb"], best: "apigateway", why: "API Gateway creates and manages APIs." }
         ],
         answers: ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"],
         questions: [
@@ -86,21 +97,27 @@
           question("2g", "A website needs a home for its image files. What stores the original objects?", "s3", "cloudfront", [0, 0, 70, 0, 0, 100, 0], "S3 stores the original files; CloudFront can deliver cached copies.", "Origin storage"),
           question("2h", "An app needs subnets and network routing for its AWS resources. Start with what?", "vpc", "route53", [100, 20, 0, 20, 0, 0, 0], "A VPC is the virtual network where you define subnets and routing.", "Networking"),
           question("2i", "Users should reach an app by its domain name. Which service provides DNS?", "route53", "alb", [0, 100, 20, 35, 20, 0, 0], "Route 53 can resolve the domain name to the application endpoint.", "Names"),
-          question("2j", "A busy site has enough servers but requests pile up at one target. What distributes them?", "alb", "autoscaling", [0, 0, 20, 100, 30, 0, 55], "An ALB routes requests among healthy application targets.", "Traffic")
+          question("2j", "A busy site has enough servers but requests pile up at one target. What distributes them?", "alb", "autoscaling", [0, 0, 20, 100, 30, 0, 55], "An ALB routes requests among healthy application targets.", "Traffic"),
+          extra("2k", "Which service lets you define subnets for AWS resources?", "vpc", "route53", ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"], "VPC provides the virtual network and subnets.", "Subnets"),
+          extra("2l", "Visitors know a domain name rather than an IP address. Which service supplies DNS?", "route53", "vpc", ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"], "Route 53 answers DNS queries for domains.", "Domain names"),
+          extra("2m", "Images load slowly overseas. Which service can cache copies at the edge?", "cloudfront", "s3", ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"], "CloudFront can cache content near viewers.", "Edge cache"),
+          extra("2n", "Several web servers need one entry point that spreads HTTP traffic. Choose it.", "alb", "autoscaling", ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"], "An ALB distributes HTTP requests among targets.", "HTTP traffic"),
+          extra("2o", "A mobile client calls a managed API endpoint. Which service provides that front door?", "apigateway", "alb", ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"], "API Gateway creates and manages API endpoints.", "API endpoint"),
+          extra("2p", "Demand drops overnight. Which service can reduce an EC2 group's instance count?", "autoscaling", "alb", ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"], "EC2 Auto Scaling adjusts the number of instances in a group.", "Scale in")
         ]
       },
       {
         id: 3, name: "Disk Drive Dungeon", icon: "💽", theme: "Data has a shape", enemy: "Query Slime", enemyIcon: "🟣",
         intro: "A disk, database, cache, and archive solve different data problems. Read the workload before choosing.",
-        repair: { title: "Rebuild a data path", steps: [
+        repair: { title: "Rebuild a data path", options: ["rds", "elasticache", "s3", "dynamodb", "ebs"], steps: [
           { id: "rds", clue: "First, restore the relational data source." },
           { id: "elasticache", clue: "Next, cache frequently read data in memory." },
           { id: "s3", clue: "Finally, keep backup files as objects." }
         ] },
         defense: [
-          { prompt: "Orders use SQL joins. Which managed database fits?", options: ["rds", "s3", "elasticache"], best: "rds", why: "RDS runs relational database engines." },
-          { prompt: "Profiles need key-value lookup. Choose the NoSQL store.", options: ["ebs", "dynamodb", "rds"], best: "dynamodb", why: "DynamoDB supports key-value data." },
-          { prompt: "Old backups can wait to be restored. Choose an archive class.", options: ["s3", "elasticache", "glacier"], best: "glacier", why: "S3 Glacier Flexible Retrieval is for infrequently accessed archives." }
+          { prompt: "Orders use SQL joins. Which managed database fits?", options: ["rds", "s3", "elasticache", "ebs", "dynamodb"], best: "rds", why: "RDS runs relational database engines." },
+          { prompt: "Profiles need key-value lookup. Choose the NoSQL store.", options: ["ebs", "dynamodb", "rds", "s3", "elasticache"], best: "dynamodb", why: "DynamoDB supports key-value data." },
+          { prompt: "Old backups can wait to be restored. Choose an archive class.", options: ["s3", "elasticache", "glacier", "rds", "ebs"], best: "glacier", why: "S3 Glacier Flexible Retrieval is for infrequently accessed archives." }
         ],
         answers: ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"],
         questions: [
@@ -113,21 +130,27 @@
           question("3g", "Backups will sit for years and slow retrieval is acceptable. Which class fits best?", "glacier", "s3", [25, 30, 20, 20, 5, 70, 100], "S3 Glacier Flexible Retrieval trades retrieval speed for archive-oriented storage.", "Archives"),
           question("3h", "A shopping app needs tables with relationships and SQL queries. Pick the managed database.", "rds", "dynamodb", [10, 20, 100, 40, 30, 10, 0], "RDS is a managed relational database choice for SQL data.", "SQL data"),
           question("3i", "A game looks up a player's inventory by ID at high scale. Which NoSQL store fits?", "dynamodb", "rds", [10, 10, 65, 100, 40, 10, 0], "DynamoDB supports key-value and document access patterns.", "NoSQL access"),
-          question("3j", "Popular product data is read repeatedly. What helps reduce reads from the main database?", "elasticache", "rds", [0, 10, 65, 50, 100, 0, 0], "ElastiCache can keep frequently read data in memory.", "Caching")
+          question("3j", "Popular product data is read repeatedly. What helps reduce reads from the main database?", "elasticache", "rds", [0, 10, 65, 50, 100, 0, 0], "ElastiCache can keep frequently read data in memory.", "Caching"),
+          extra("3k", "A self-managed database on EC2 needs an attached block volume. Choose it.", "ebs", "rds", ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"], "EBS provides block volumes for EC2.", "Block storage"),
+          extra("3l", "A report joins order and customer tables. Which managed database family fits?", "rds", "dynamodb", ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"], "RDS operates relational database engines.", "Joins"),
+          extra("3m", "A player profile is retrieved by its key. Choose the managed NoSQL service.", "dynamodb", "rds", ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"], "DynamoDB supports key-value access.", "Keys"),
+          extra("3n", "Keep frequently requested data in memory to reduce database reads. Choose it.", "elasticache", "rds", ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"], "ElastiCache stores frequently used data in memory.", "Fast reads"),
+          extra("3o", "Daily backup files need object storage. Choose the bucket service.", "s3", "ebs", ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"], "S3 stores backup files as objects in buckets.", "Backup objects"),
+          extra("3p", "An archive can wait to be restored. Which S3 class is built for that?", "glacier", "s3", ["hdd", "ebs", "rds", "dynamodb", "elasticache", "s3", "glacier"], "S3 Glacier Flexible Retrieval is an archive-oriented storage class.", "Archive")
         ]
       },
       {
         id: 4, name: "Server Room", icon: "🖥️", theme: "Work gets done", enemy: "Traffic Troll", enemyIcon: "👹",
         intro: "Compute, scaling, routing, and monitoring are teammates. Pick the one that directly solves the prompt.",
-        repair: { title: "Recover a busy application", steps: [
+        repair: { title: "Recover a busy application", options: ["cloudwatch", "autoscaling", "alb", "lambda", "vpc"], steps: [
           { id: "cloudwatch", clue: "First, find the traffic spike in metrics." },
           { id: "autoscaling", clue: "Next, adjust the number of EC2 instances." },
           { id: "alb", clue: "Finally, spread HTTP requests among targets." }
         ] },
         defense: [
-          { prompt: "EC2 instance count must grow with demand. Choose it.", options: ["ec2", "autoscaling", "vpc"], best: "autoscaling", why: "EC2 Auto Scaling adjusts instance count." },
-          { prompt: "HTTP requests need healthy targets. Choose the balancer.", options: ["apigateway", "cloudwatch", "alb"], best: "alb", why: "An ALB distributes HTTP and HTTPS requests." },
-          { prompt: "Error metrics need an alarm. Choose visibility.", options: ["cloudwatch", "lambda", "vpc"], best: "cloudwatch", why: "CloudWatch provides metrics and alarms." }
+          { prompt: "EC2 instance count must grow with demand. Choose it.", options: ["ec2", "autoscaling", "vpc", "alb", "lambda"], best: "autoscaling", why: "EC2 Auto Scaling adjusts instance count." },
+          { prompt: "HTTP requests need healthy targets. Choose the balancer.", options: ["apigateway", "cloudwatch", "alb", "autoscaling", "vpc"], best: "alb", why: "An ALB distributes HTTP and HTTPS requests." },
+          { prompt: "Error metrics need an alarm. Choose visibility.", options: ["cloudwatch", "lambda", "vpc", "alb", "ec2"], best: "cloudwatch", why: "CloudWatch provides metrics and alarms." }
         ],
         answers: ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"],
         questions: [
@@ -140,21 +163,27 @@
           question("4g", "Your servers need a logically isolated AWS network. Which service defines it?", "vpc", "ec2", [35, 10, 20, 20, 20, 15, 100], "A VPC supplies the network boundary in which resources such as EC2 instances run.", "Network boundary"),
           question("4h", "A scheduled job runs briefly each day. Which service runs code without a server to manage?", "lambda", "ec2", [55, 100, 30, 10, 35, 10, 0], "Lambda suits short event-driven code; EC2 gives a server to manage.", "Short jobs"),
           question("4i", "Errors are rising but you cannot see when. Which service provides logs and alarms?", "cloudwatch", "ec2", [20, 20, 20, 20, 20, 100, 0], "CloudWatch gathers logs and metrics and can raise alarms.", "Visibility"),
-          question("4j", "A web app needs more EC2 instances during busy hours and fewer later. Pick the fleet controller.", "autoscaling", "alb", [60, 30, 100, 65, 20, 35, 20], "EC2 Auto Scaling adjusts instance count; ALB spreads requests across targets.", "Capacity")
+          question("4j", "A web app needs more EC2 instances during busy hours and fewer later. Pick the fleet controller.", "autoscaling", "alb", [60, 30, 100, 65, 20, 35, 20], "EC2 Auto Scaling adjusts instance count; ALB spreads requests across targets.", "Capacity"),
+          extra("4k", "A program needs a virtual server that you can configure. Choose it.", "ec2", "lambda", ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"], "EC2 provides configurable virtual servers.", "Servers"),
+          extra("4l", "Code runs when an event arrives, without you managing a server. Choose it.", "lambda", "ec2", ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"], "Lambda runs code in response to events.", "Event code"),
+          extra("4m", "Traffic doubles and the EC2 group needs more instances. Choose it.", "autoscaling", "alb", ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"], "EC2 Auto Scaling adjusts fleet size.", "Capacity"),
+          extra("4n", "Requests need routing to healthy web targets. Choose the load balancer.", "alb", "autoscaling", ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"], "An ALB distributes HTTP requests across targets.", "Routing"),
+          extra("4o", "An app exposes a managed API endpoint to clients. Choose it.", "apigateway", "alb", ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"], "API Gateway creates and manages APIs.", "API"),
+          extra("4p", "Operators need a metric alarm for high errors. Choose it.", "cloudwatch", "ec2", ["ec2", "lambda", "autoscaling", "alb", "apigateway", "cloudwatch", "vpc"], "CloudWatch tracks metrics and can raise alarms.", "Monitoring")
         ]
       },
       {
         id: 5, name: "Cloud Control", icon: "☁️", theme: "Guard and automate", enemy: "Permission Phantom", enemyIcon: "👻",
         intro: "Secure access, manage keys, filter web traffic, and connect serverless pieces.",
-        repair: { title: "Restore a secured API", steps: [
+        repair: { title: "Restore a secured API", options: ["iam", "waf", "cloudwatch", "kms", "lambda"], steps: [
           { id: "iam", clue: "First, review who is allowed to access resources." },
           { id: "waf", clue: "Next, filter unwanted HTTP requests." },
           { id: "cloudwatch", clue: "Finally, watch error metrics and alarms." }
         ] },
         defense: [
-          { prompt: "A role has too much access. Which service controls permissions?", options: ["kms", "iam", "waf"], best: "iam", why: "IAM policies control permissions." },
-          { prompt: "Unwanted HTTP requests reach your app. Choose the web filter.", options: ["cloudwatch", "waf", "iam"], best: "waf", why: "AWS WAF filters web requests." },
-          { prompt: "You need to manage encryption keys. Choose the key service.", options: ["kms", "iam", "dynamodb"], best: "kms", why: "KMS manages keys for supported encryption workflows." }
+          { prompt: "A role has too much access. Which service controls permissions?", options: ["kms", "iam", "waf", "lambda", "cloudwatch"], best: "iam", why: "IAM policies control permissions." },
+          { prompt: "Unwanted HTTP requests reach your app. Choose the web filter.", options: ["cloudwatch", "waf", "iam", "kms", "dynamodb"], best: "waf", why: "AWS WAF filters web requests." },
+          { prompt: "You need to manage encryption keys. Choose the key service.", options: ["kms", "iam", "dynamodb", "waf", "lambda"], best: "kms", why: "KMS manages keys for supported encryption workflows." }
         ],
         answers: ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"],
         questions: [
@@ -167,21 +196,27 @@
           question("5g", "Watch error metrics and set an alarm when they rise. Which service observes them?", "cloudwatch", "waf", [20, 15, 35, 20, 20, 30, 100], "CloudWatch collects metrics and can trigger alarms; WAF filters web requests.", "Alarms"),
           question("5h", "A role must be allowed to call a protected AWS API. Which service grants permission?", "iam", "apigateway", [100, 30, 10, 10, 40, 10, 10], "IAM policies determine permissions for AWS identities and roles.", "Authorization"),
           question("5i", "Security wants to control the encryption keys used by an AWS workload. Choose the key manager.", "kms", "iam", [50, 100, 10, 0, 0, 10, 10], "KMS manages keys used by supported AWS encryption workflows.", "Encryption"),
-          question("5j", "A web endpoint is flooded with suspicious HTTP requests. Which service filters those requests?", "waf", "cloudwatch", [10, 10, 100, 0, 40, 0, 35], "AWS WAF applies rules to web requests reaching supported resources.", "Web traffic")
+          question("5j", "A web endpoint is flooded with suspicious HTTP requests. Which service filters those requests?", "waf", "cloudwatch", [10, 10, 100, 0, 40, 0, 35], "AWS WAF applies rules to web requests reaching supported resources.", "Web traffic"),
+          extra("5k", "An application role needs permission to read one AWS resource. Choose it.", "iam", "kms", ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"], "IAM manages access permissions for roles.", "Role access"),
+          extra("5l", "A workload needs managed encryption keys. Choose the key service.", "kms", "iam", ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"], "KMS manages encryption keys for supported workflows.", "Keys"),
+          extra("5m", "A supported web endpoint needs rules for unwanted HTTP requests. Choose it.", "waf", "cloudwatch", ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"], "AWS WAF filters web requests with rules.", "Web rules"),
+          extra("5n", "An API call should start event-driven code. Which service executes that code?", "lambda", "apigateway", ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"], "Lambda runs code when triggered by events.", "Code execution"),
+          extra("5o", "A mobile app needs an API front door. Choose the managed API service.", "apigateway", "lambda", ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"], "API Gateway creates and manages APIs.", "API front door"),
+          extra("5p", "Store settings by player ID in a managed NoSQL database. Choose it.", "dynamodb", "apigateway", ["iam", "kms", "waf", "lambda", "apigateway", "dynamodb", "cloudwatch"], "DynamoDB supports key-value data.", "Profiles")
         ]
       },
       {
         id: 6, name: "The Global Grid", icon: "🌐", theme: "Final architecture", enemy: "Latency Leviathan", enemyIcon: "🐉",
         intro: "The final duel combines delivery, routing, scaling, storage, networking, and protection.",
-        repair: { title: "Reconnect a global static site", steps: [
+        repair: { title: "Reconnect a global static site", options: ["route53", "cloudfront", "s3", "alb", "vpc"], steps: [
           { id: "route53", clue: "First, resolve the visitor's domain name." },
           { id: "cloudfront", clue: "Next, deliver cached content from edge locations." },
           { id: "s3", clue: "Finally, reach the original stored site objects when needed." }
         ] },
         defense: [
-          { prompt: "A global audience needs nearby cached images. Choose it.", options: ["s3", "cloudfront", "alb"], best: "cloudfront", why: "CloudFront caches content near viewers." },
-          { prompt: "The EC2 fleet needs more instances. Choose the scaler.", options: ["route53", "autoscaling", "vpc"], best: "autoscaling", why: "EC2 Auto Scaling adjusts fleet size." },
-          { prompt: "Suspicious HTTP requests need filtering. Choose it.", options: ["alb", "s3", "waf"], best: "waf", why: "AWS WAF applies web-request rules." }
+          { prompt: "A global audience needs nearby cached images. Choose it.", options: ["s3", "cloudfront", "alb", "route53", "vpc"], best: "cloudfront", why: "CloudFront caches content near viewers." },
+          { prompt: "The EC2 fleet needs more instances. Choose the scaler.", options: ["route53", "autoscaling", "vpc", "alb", "s3"], best: "autoscaling", why: "EC2 Auto Scaling adjusts fleet size." },
+          { prompt: "Suspicious HTTP requests need filtering. Choose it.", options: ["alb", "s3", "waf", "route53", "vpc"], best: "waf", why: "AWS WAF applies web-request rules." }
         ],
         answers: ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"],
         questions: [
@@ -194,7 +229,13 @@
           question("6g", "Filter unwanted HTTP requests before they reach the web app. Pick the web firewall.", "waf", "alb", [25, 15, 45, 20, 10, 30, 100], "AWS WAF applies web-request rules; an ALB mainly distributes application traffic.", "Web filtering"),
           question("6h", "A growing EC2 group needs requests shared among healthy web targets. What routes the requests?", "alb", "autoscaling", [30, 20, 100, 70, 20, 20, 20], "An ALB distributes application requests; Auto Scaling controls instance count.", "Resilience"),
           question("6i", "A marketing page serves the same images worldwide. Which service caches them near users?", "cloudfront", "s3", [100, 30, 20, 10, 70, 10, 0], "CloudFront can cache copies at edge locations near viewers.", "Edge caching"),
-          question("6j", "The app's domain must resolve to its public endpoint. Choose the DNS service.", "route53", "cloudfront", [45, 100, 20, 10, 20, 0, 0], "Route 53 provides DNS for domain names and endpoints.", "DNS")
+          question("6j", "The app's domain must resolve to its public endpoint. Choose the DNS service.", "route53", "cloudfront", [45, 100, 20, 10, 20, 0, 0], "Route 53 provides DNS for domain names and endpoints.", "DNS"),
+          extra("6k", "Serve cached site images near users worldwide. Choose the edge service.", "cloudfront", "s3", ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"], "CloudFront can cache content at edge locations.", "Global cache"),
+          extra("6l", "A visitor enters a domain name. Which service handles DNS?", "route53", "cloudfront", ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"], "Route 53 provides DNS service.", "DNS"),
+          extra("6m", "Spread HTTP requests across healthy application targets. Choose it.", "alb", "autoscaling", ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"], "An ALB distributes application traffic among targets.", "Load balancing"),
+          extra("6n", "A busy EC2 group must add instances. Which service changes capacity?", "autoscaling", "alb", ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"], "EC2 Auto Scaling adjusts instance count.", "Scaling"),
+          extra("6o", "Original static site files need an object store. Choose it.", "s3", "cloudfront", ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"], "S3 stores static site files as objects.", "Origin files"),
+          extra("6p", "App resources need subnets in an isolated AWS network. Choose it.", "vpc", "route53", ["cloudfront", "route53", "alb", "autoscaling", "s3", "vpc", "waf"], "VPC defines the isolated virtual network.", "Network")
         ]
       }
     ]

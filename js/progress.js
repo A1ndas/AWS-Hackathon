@@ -6,7 +6,7 @@
   var memory = null;
 
   function fresh() {
-    return { unlocked: 1, best: {}, completed: {}, sound: true };
+    return { unlocked: 1, best: {}, completed: {}, seenQuestions: {}, sound: true };
   }
 
   function normalize(value) {
@@ -15,6 +15,13 @@
     clean.unlocked = Math.max(1, Math.min(6, Number(value.unlocked) || 1));
     clean.best = value.best && typeof value.best === "object" ? value.best : {};
     clean.completed = value.completed && typeof value.completed === "object" ? value.completed : {};
+    if (value.seenQuestions && typeof value.seenQuestions === "object") {
+      Object.keys(value.seenQuestions).forEach(function (id) {
+        if (Array.isArray(value.seenQuestions[id])) {
+          clean.seenQuestions[id] = value.seenQuestions[id].filter(function (q) { return typeof q === "string"; });
+        }
+      });
+    }
     clean.sound = value.sound !== false;
     return clean;
   }
@@ -49,6 +56,19 @@
       return sum + (Number(progress.best[id]) || 0);
     }, 0);
   }
+  function markSeen(progress, level, ids) {
+    var next = normalize(progress), key = String(level.id);
+    var valid = level.questions.map(function (q) { return q.id; });
+    var seen = (next.seenQuestions[key] || []).filter(function (id) { return valid.indexOf(id) >= 0; });
+    if (seen.length === valid.length) seen = [];
+    ids.forEach(function (id) {
+      if (valid.indexOf(id) < 0 || seen.indexOf(id) >= 0) return;
+      if (seen.length === valid.length) seen = [];
+      seen.push(id);
+    });
+    next.seenQuestions[key] = seen;
+    return save(next);
+  }
 
   function setSound(progress, enabled) {
     var next = normalize(progress);
@@ -68,5 +88,5 @@
     return fresh();
   }
 
-  window.GameProgress = { load: load, save: save, record: record, xp: xp, setSound: setSound, unlockAll: unlockAll, reset: reset };
+  window.GameProgress = { load: load, save: save, record: record, markSeen: markSeen, xp: xp, setSound: setSound, unlockAll: unlockAll, reset: reset };
 }());

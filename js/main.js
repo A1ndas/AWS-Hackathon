@@ -4,7 +4,7 @@
   var content = window.GAME_CONTENT, engine = window.GameEngine;
   var progressApi = window.GameProgress, ui = window.GameUI;
   var progress = progressApi.load();
-  var screen = 'title', level = null, duel = null, review = null, pick = null, mini = null;
+  var screen = 'title', level = null, duel = null, review = null, pick = null, mini = null, matchPick = [];
   var timer = null, deadline = 0;
 
   function stopTimer() { if (timer !== null) window.clearInterval(timer); timer = null; }
@@ -12,7 +12,7 @@
     if (screen === 'title') ui.renderTitle(progress, content);
     if (screen === 'map') ui.renderMap(progress, content);
     if (screen === 'intro') ui.renderIntro(progress, content, level);
-    if (screen === 'duel') ui.renderDuel(progress, content, level, duel, review, pick, mini);
+    if (screen === 'duel') ui.renderDuel(progress, content, level, duel, review, pick, mini, matchPick);
     if (screen === 'result') ui.renderResult(progress, content, level, duel);
   }
   function startAttackTimer() {
@@ -28,7 +28,7 @@
     }, 100);
   }
   function startMiniTimer() {
-    stopTimer(); deadline = Date.now() + (mini.kind === 'heal' ? 14000 : 12000);
+    stopTimer(); deadline = Date.now() + (mini.kind === 'heal' ? 18000 : 16000);
     timer = window.setInterval(function () {
       var left = Math.max(0, deadline - Date.now());
       var label = document.getElementById('mini-time');
@@ -36,18 +36,24 @@
       if (left <= 0) finishMini(false);
     }, 100);
   }
-  function map() { stopTimer(); screen = 'map'; review = null; pick = null; mini = null; draw(); ui.music(progress.sound); }
+  function rememberCurrent() {
+    if (!duel || duel.status !== 'active') return;
+    var ids = engine.mode(level, duel) === 'match' ? engine.matchPairs(level, duel).questions.map(function (q) { return q.id; }) : [engine.question(level, duel).id];
+    progress = progressApi.markSeen(progress, level, ids);
+  }
+  function map() { stopTimer(); screen = 'map'; review = null; pick = null; mini = null; matchPick = []; draw(); ui.music(progress.sound); }
   function chooseLevel(id) {
     if (id < 1 || id > progress.unlocked) return;
     stopTimer(); level = content.levels[id - 1]; duel = null; review = null;
-    pick = null; mini = null; screen = 'intro'; draw();
+    pick = null; mini = null; matchPick = []; screen = 'intro'; draw();
   }
   function begin() {
-    stopTimer(); duel = engine.startLevel(level); review = null; pick = null; mini = null;
+    stopTimer(); duel = engine.startLevel(level, progress.seenQuestions[String(level.id)] || []); review = null; pick = null; mini = null; matchPick = [];
+    rememberCurrent();
     screen = 'duel'; draw(); ui.music(progress.sound); ui.sound('start', progress.sound); startAttackTimer();
   }
   function resolve(action) {
-    stopTimer(); mini = null; pick = null;
+    stopTimer(); mini = null; pick = null; matchPick = [];
     duel = engine.act(level, duel, action);
     review = duel.history[duel.history.length - 1];
     var cue = action.kind === 'heal' ? (action.success ? 'heal' : 'hurt') :
@@ -66,6 +72,14 @@
   function playAnswer(answerId, timedOut) {
     if (screen !== 'duel' || review || mini || duel.status !== 'active') return;
     var mode = engine.mode(level, duel);
+    if (mode === 'match') {
+      var pairs = engine.matchPairs(level, duel);
+      if (pairs.answers.indexOf(answerId) < 0 || matchPick.indexOf(answerId) >= 0) return;
+      matchPick.push(answerId);
+      if (matchPick.length === 4) resolve({ kind: 'match', matches: matchPick.slice() });
+      else { ui.sound('pick', progress.sound); draw(); }
+      return;
+    }
     if (mode === 'build' && !timedOut && !pick) {
       pick = answerId; ui.sound('pick', progress.sound); draw(); return;
     }
@@ -78,7 +92,7 @@
   function startMini(kind) {
     if (screen !== 'duel' || review || mini || duel.status !== 'active') return;
     if (kind === 'heal' && !engine.canHeal(duel) || kind === 'defend' && !engine.canDefend(duel)) return;
-    stopTimer(); pick = null;
+    stopTimer(); pick = null; matchPick = [];
     mini = { kind: kind, step: 0 };
     draw(); ui.sound('start', progress.sound); startMiniTimer();
   }
@@ -95,7 +109,7 @@
   }
   function repairOptions() {
     var steps = level.repair.steps;
-    return [steps[1].id, steps[2].id, steps[0].id];
+    return level.repair.options;
   }
   function miniRepair(id) {
     if (!mini || mini.kind !== 'heal') return;
@@ -118,6 +132,7 @@
       progress = progressApi.record(progress, level, { won: duel.won, playerScore: duel.score });
       screen = 'result'; ui.sound(duel.won ? 'win' : 'lose', progress.sound);
     }
+    if (screen === 'duel') rememberCurrent();
     draw(); startAttackTimer();
   }
   document.addEventListener('click', function (event) {
@@ -126,7 +141,6 @@
     var action = control.dataset.action;
     if (action === 'home') { stopTimer(); screen = 'title'; review = null; mini = null; draw(); }
     else if (action === 'map') map();
-    else if (action === 'how') document.getElementById('how').scrollIntoView({ behavior: 'smooth' });
     else if (action === 'level') chooseLevel(Number(control.dataset.level));
     else if (action === 'begin' || action === 'retry') begin();
     else if (action === 'answer') playAnswer(control.dataset.answer, false);
@@ -149,14 +163,16 @@
     if (screen === 'duel' && review && event.key === 'Enter') {
       event.preventDefault(); continueDuel(); return;
     }
-    if (screen === 'duel' && mini && /^[1-3]$/.test(event.key)) {
+    if (screen === 'duel' && mini && /^[1-5]$/.test(event.key)) {
       event.preventDefault();
       if (mini.kind === 'heal') miniRepair(repairOptions()[Number(event.key) - 1]);
       else miniDefense(level.defense[mini.step].options[Number(event.key) - 1]);
       return;
     }
     if (screen === 'duel' && !review && !mini && /^[1-4]$/.test(event.key)) {
-      event.preventDefault(); playAnswer(engine.hand(level, duel)[Number(event.key) - 1], false);
+      event.preventDefault();
+      var options = engine.mode(level, duel) === 'match' ? engine.matchPairs(level, duel).answers : engine.hand(level, duel);
+      playAnswer(options[Number(event.key) - 1], false);
     }
   });
   draw();
