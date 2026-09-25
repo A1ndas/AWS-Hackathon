@@ -1,0 +1,25 @@
+{
+  "name": "question-duel",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Question Duel: a single-player AWS strategy card game. React UI on top of the DOM-free game engine.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node tools/test_combat.js && node tools/smoke_ui.js",
+    "lint": "oxlint"
+  },
+  "dependencies": {
+    "lucide-react": "^1.48.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "vite": "^8.3.0"
+  }
+}
