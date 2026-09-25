@@ -319,3 +319,54 @@ kbd { font: inherit; color: var(--orange-2); background: #263348; border: 1px so
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Question Duel combat */
+.battle-hud { display: grid; grid-template-columns: 1fr 52px 1fr; align-items: center; gap: 17px; margin: 14px 0 18px; padding: 16px 20px; border: 1px solid rgba(255,153,0,.35); border-radius: 18px; background: linear-gradient(100deg, #192738, #111b29 50%, #2b2631); box-shadow: 0 0 35px rgba(255,153,0,.07); }
+.health-unit { min-width: 0; }
+.health-label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; color: #e9f2ff; font-size: 11px; font-weight: 900; letter-spacing: .07em; }
+.health-label b { white-space: nowrap; color: #fff; }
+.health-track { overflow: hidden; height: 17px; border-radius: 30px; background: #0b111a; border: 1px solid rgba(255,255,255,.15); box-shadow: inset 0 2px 8px #000; }
+.health-track span { display: block; height: 100%; border-radius: inherit; transition: width .5s cubic-bezier(.2,.8,.2,1); }
+.player-health { background: linear-gradient(90deg, #42d3ff, #8bffb1); box-shadow: 0 0 20px rgba(66,211,255,.6); }
+.enemy-health { background: linear-gradient(90deg, #ff3869, #ff9900); box-shadow: 0 0 20px rgba(255,77,92,.6); }
+.versus-mini { text-align: center; font-size: 27px; filter: drop-shadow(0 0 12px rgba(255,153,0,.7)); animation: battle-pulse 1.4s ease-in-out infinite; }
+.battle-hand { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 960px; margin: 0 auto; }
+.battle-hand .answer-card { min-height: 155px; border-color: rgba(255,153,0,.25); background: linear-gradient(150deg, #304158, #182536); }
+.battle-hand .answer-card:not(:disabled):hover { transform: translateY(-10px) scale(1.03); box-shadow: 0 18px 35px rgba(255,153,0,.28), 0 0 30px rgba(255,153,0,.15); }
+.battle-hand .answer-card.picked { box-shadow: 0 0 0 2px var(--orange), 0 0 40px rgba(255,153,0,.4); animation: card-charge .55s ease-in-out infinite alternate; }
+.battle-foot { margin: 16px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+.timer-wrap { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 6px; border-radius: 9px; background: #0d1723; border: 1px solid rgba(255,111,128,.5); box-shadow: 0 0 28px rgba(255,70,95,.15); }
+.timer-bar { width: 100%; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #ff4c6d, #ff9900); box-shadow: 0 0 16px #ff6f80; transition: width .1s linear; }
+.timer-wrap strong { min-width: 32px; color: #fff; font-size: 15px; }
+.impact-hit .rival-card { animation: enemy-hit .55s ease both; }
+.impact-hurt .battle-hud { animation: screen-shake .45s ease both; box-shadow: 0 0 45px rgba(255,56,105,.4); }
+.impact-hit .question-card { box-shadow: 0 0 60px rgba(255,153,0,.45); }
+.feedback-panel.tone-perfect { animation: pop-in .3s ease-out both, battle-pulse 1s .3s ease-in-out 2; }
+.feedback-panel.tone-miss { animation: pop-in .3s ease-out both, screen-shake .4s .3s ease both; }
+.feedback-panel.tone-perfect::before { content: ""; position: absolute; inset: -60%; pointer-events: none; background: conic-gradient(transparent 0 35%, rgba(255,153,0,.12) 45%, transparent 55% 100%); animation: victory-spin 1.5s linear infinite; }
+.feedback-panel > * { position: relative; }
+.result-screen.won .result-icon { filter: drop-shadow(0 0 32px var(--orange)); }
+.result-screen.lost .result-icon { filter: drop-shadow(0 0 24px var(--red)); }
+.dodge-panel { width: min(680px, 100%); padding: 35px; text-align: center; border: 2px solid var(--orange); border-radius: 24px; background: radial-gradient(circle at top, #3b2a39, #172333 65%); box-shadow: 0 0 90px rgba(255,153,0,.32), 0 25px 100px #000; animation: pop-in .25s ease both; }
+.dodge-panel h2 { margin: 8px 0; color: var(--orange-2); font-size: clamp(34px, 4vw, 56px); letter-spacing: -.05em; text-shadow: 0 0 26px rgba(255,153,0,.5); }
+.dodge-panel p { max-width: 480px; margin: 0 auto 12px; color: #d7e2ee; line-height: 1.5; }
+.dodge-countdown { font-size: 28px; font-weight: 950; color: var(--red); text-shadow: 0 0 20px rgba(255,111,128,.6); }
+.dodge-lanes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+.dodge-lane { display: grid; gap: 8px; place-items: center; min-height: 130px; color: #fff; border: 2px solid var(--cyan); border-radius: 16px; background: linear-gradient(150deg, #224158, #172738); box-shadow: 0 0 25px rgba(65,217,255,.18); transition: transform .16s, box-shadow .16s; }
+.dodge-lane:hover { transform: translateY(-8px) scale(1.04); box-shadow: 0 0 40px rgba(65,217,255,.5); }
+.dodge-lane span { font-size: 46px; }
+.dodge-lane b { font-size: 12px; letter-spacing: .14em; }
+.dodge-lane.danger { border-color: var(--red); background: linear-gradient(150deg, #743448, #321f33); box-shadow: 0 0 35px rgba(255,70,95,.5); animation: danger-flash .5s ease-in-out infinite alternate; }
+.dodge-panel > small { color: var(--muted); }
+@keyframes battle-pulse { 50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255,153,0,.8)); } }
+@keyframes card-charge { to { transform: translateY(-5px); filter: brightness(1.2); } }
+@keyframes enemy-hit { 15%, 45% { transform: translateX(-15px) rotate(-4deg); filter: brightness(2); } 30%, 60% { transform: translateX(12px) rotate(3deg); } 100% { transform: none; } }
+@keyframes screen-shake { 15%, 55% { transform: translateX(-7px); } 35%, 75% { transform: translateX(7px); } 100% { transform: none; } }
+@keyframes victory-spin { to { transform: rotate(360deg); } }
+@keyframes danger-flash { to { filter: brightness(1.7); box-shadow: 0 0 55px rgba(255,70,95,.85); } }
+@media (max-width: 700px) {
+  .battle-hud { grid-template-columns: 1fr; gap: 7px; padding: 12px; }
+  .versus-mini { display: none; }
+  .battle-hand { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .health-label { font-size: 9px; }
+}

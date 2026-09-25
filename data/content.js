@@ -2,13 +2,13 @@
 (function () {
   "use strict";
 
-  function question(id, prompt, best, rival, scores, why, topic) {
-    return { id: id, prompt: prompt, best: best, rival: rival, scores: scores, why: why, topic: topic };
+  function question(id, prompt, best, rival, scores, why, topic, support) {
+    return { id: id, prompt: prompt, best: best, rival: rival, scores: scores, why: why, topic: topic, support: support || null };
   }
 
   window.GAME_CONTENT = {
     title: "Question Duel",
-    subtitle: "Outsmart the cloud bot. Learn why your answer works.",
+    subtitle: "Defeat cloud threats by learning what AWS services really do.",
     rivalName: "PATCHBOT",
     cards: {
       cd: { name: "CD", icon: "💿", type: "physical", tip: "An optical disc can hold a fixed offline copy, but it is small and awkward to update." },
@@ -36,31 +36,37 @@
     },
     levels: [
       {
-        id: 1, name: "The CD Era", icon: "💿", theme: "Storage begins", enemy: "Dusty Disk", enemyIcon: "📀",
-        intro: "Start with familiar storage. Capacity is only one part of choosing the right tool.",
-        answers: ["cd", "usb", "hdd", "s3", "glacier", "ebs", "efs"],
+        id: 1, name: "Cloud Bootcamp", icon: "💿", theme: "AWS essentials", enemy: "Cloud Confuser", enemyIcon: "📀",
+        intro: "Meet the core building blocks: files, servers, code, databases, access, delivery, and monitoring.",
+        answers: ["s3", "ec2", "lambda", "rds", "iam", "cloudfront", "cloudwatch"],
         questions: [
-          question("1a", "A website needs to keep a 10 MB image as an object. What is the best fit?", "s3", "hdd", [10, 15, 30, 100, 5, 45, 55], "S3 is object storage built for files such as website images; a disk can hold the bytes but is not the same service.", "Object storage"),
-          question("1b", "Old project files are rarely opened, and a restore can take hours. Where should the archive go?", "glacier", "hdd", [40, 35, 55, 70, 100, 45, 50], "S3 Glacier Flexible Retrieval is designed for infrequent access when retrieval time can be longer.", "Archive storage"),
-          question("1c", "An EC2 instance needs a persistent block volume for database files. Pick its storage.", "ebs", "s3", [0, 10, 40, 20, 0, 100, 55], "EBS is block storage attached to EC2; a physical hard drive is a useful analogy, not the AWS service.", "Block storage"),
-          question("1d", "Several Linux servers must read and write the same mounted file system. Which fits?", "efs", "hdd", [0, 10, 25, 45, 0, 30, 100], "EFS provides a shared file system that multiple compute resources can mount.", "Shared files"),
-          question("1e", "You must carry a slide deck to a room with no internet connection. Choose a portable option.", "usb", "s3", [65, 100, 80, 45, 5, 25, 20], "A USB drive is simple for carrying a small file offline; cloud storage needs a network connection to retrieve it.", "Offline transfer"),
-          question("1f", "A museum wants to hand out a fixed, read-only disc of photos. Which physical medium matches?", "cd", "s3", [100, 65, 65, 35, 15, 10, 10], "A CD is an optical medium suited to a fixed offline copy; it is less flexible for updates.", "Physical media"),
-          question("1g", "A desktop needs lots of local space for an offline photo collection. Which is the closest match?", "hdd", "s3", [70, 80, 100, 45, 15, 30, 20], "A 1 TB hard drive gives local capacity, but it does not add cloud sharing or managed backups by itself.", "Local capacity")
+          question("1a", "A website needs to store uploaded photos. Which service stores the image objects?", "s3", "ec2", [100, 30, 10, 20, 0, 45, 0], "Amazon S3 stores objects such as photos in buckets.", "Store files"),
+          question("1b", "You need a virtual server you can configure. Which service provides one?", "ec2", "lambda", [10, 100, 40, 10, 0, 0, 0], "Amazon EC2 provides virtual servers called instances.", "Run servers"),
+          question("1c", "An upload should trigger a short function without managing a server. Choose the service.", "lambda", "ec2", [10, 50, 100, 0, 0, 0, 10], "AWS Lambda runs code in response to events without managing servers.", "Run code"),
+          question("1d", "An orders app needs a managed relational database. What fits?", "rds", "s3", [20, 20, 10, 100, 0, 0, 10], "Amazon RDS helps operate relational databases.", "Database"),
+          question("1e", "Who can read an AWS resource? Choose the service for permissions.", "iam", "cloudwatch", [0, 0, 0, 0, 100, 0, 20], "AWS IAM manages identities and access permissions.", "Access"),
+          question("1f", "Global visitors need website content delivered from nearby edge locations. Pick the service.", "cloudfront", "s3", [60, 10, 10, 0, 0, 100, 10], "CloudFront delivers content through edge locations and can cache copies near viewers.", "Delivery"),
+          question("1g", "You want metrics and alarms to spot an unhealthy app. Which service helps?", "cloudwatch", "ec2", [0, 20, 20, 0, 0, 0, 100], "CloudWatch collects metrics and can raise alarms.", "Observe"),
+          question("1h", "A team wants to host a long-running application on a configurable AWS machine. Choose it.", "ec2", "rds", [10, 100, 45, 25, 0, 0, 15], "EC2 is the virtual server; RDS is for relational databases.", "Compute"),
+          question("1i", "A developer needs a place for static site files before delivering them worldwide. Pick the store.", "s3", "cloudfront", [100, 5, 0, 0, 0, 65, 0], "S3 can store static site objects while CloudFront delivers them.", "Website files"),
+          question("1j", "A new teammate should get only the AWS permissions required for their job. What manages that?", "iam", "cloudwatch", [0, 0, 0, 0, 100, 0, 15], "IAM policies grant permissions to identities and roles.", "Least privilege")
         ]
       },
       {
-        id: 2, name: "The USB Crossing", icon: "🔌", theme: "Files move", enemy: "Cable Gremlin", enemyIcon: "👾",
-        intro: "Move files between people, servers, and regions. The best answer depends on how they are accessed.",
-        answers: ["usb", "s3", "efs", "ebs", "cloudfront", "route53", "vpc"],
+        id: 2, name: "Connected Cloud", icon: "🔌", theme: "Networks and traffic", enemy: "Cable Gremlin", enemyIcon: "👾",
+        intro: "Learn how apps connect: networks, domain names, APIs, traffic distribution, and global delivery.",
+        answers: ["vpc", "route53", "cloudfront", "alb", "apigateway", "s3", "autoscaling"],
         questions: [
-          question("2a", "A teammate needs to carry files to an offline computer. Which answer works directly?", "usb", "s3", [100, 35, 20, 20, 15, 0, 0], "A USB drive transfers files without a network; S3 is useful once the devices can connect.", "Offline access"),
-          question("2b", "A web app stores user-uploaded images as objects. Which AWS service is the best home?", "s3", "cloudfront", [30, 100, 55, 50, 70, 10, 10], "S3 stores the image objects; CloudFront can deliver cached copies from an S3 origin.", "Object storage"),
-          question("2c", "Three Linux EC2 instances need one shared, mounted file system. Choose it.", "efs", "s3", [10, 50, 100, 35, 20, 0, 35], "EFS is a shared file system; S3 uses object access rather than a normal shared mount.", "File storage"),
-          question("2d", "One EC2 instance needs a persistent block volume. Which service supplies it?", "ebs", "efs", [10, 25, 55, 100, 0, 0, 30], "EBS supplies attachable block volumes for EC2 instances.", "Block storage"),
-          question("2e", "Visitors around the world wait for the same site images. What helps deliver cached copies nearby?", "cloudfront", "s3", [15, 70, 30, 20, 100, 40, 25], "CloudFront caches and serves content from edge locations closer to viewers.", "Edge delivery"),
-          question("2f", "People type a domain name; which service answers DNS queries for it?", "route53", "cloudfront", [0, 25, 10, 0, 40, 100, 20], "Route 53 is AWS's DNS service; CloudFront delivers content after users reach an endpoint.", "DNS"),
-          question("2g", "Your AWS resources need a logically isolated network. What do you create?", "vpc", "efs", [0, 10, 30, 20, 10, 20, 100], "A VPC defines an isolated virtual network for AWS resources.", "Networking")
+          question("2a", "Your AWS resources need a logically isolated virtual network. What do you create?", "vpc", "route53", [100, 20, 0, 20, 0, 0, 0], "A VPC defines a logically isolated network for AWS resources.", "Virtual network"),
+          question("2b", "People type a domain name. Which service answers the DNS query?", "route53", "cloudfront", [0, 100, 40, 0, 0, 0, 0], "Route 53 is AWS's DNS service.", "DNS"),
+          question("2c", "Visitors far away need cached copies of site images nearby. Pick edge delivery.", "cloudfront", "s3", [0, 20, 100, 20, 0, 65, 0], "CloudFront can cache and deliver content from edge locations.", "Global delivery"),
+          question("2d", "HTTP requests must be spread across several application targets. Choose the balancer.", "alb", "autoscaling", [10, 10, 35, 100, 50, 0, 65], "An Application Load Balancer distributes HTTP and HTTPS requests across targets.", "Load balancing"),
+          question("2e", "A mobile app needs a managed front door for its API. Pick the service.", "apigateway", "alb", [0, 20, 20, 70, 100, 0, 0], "API Gateway creates and manages APIs for backend services.", "APIs"),
+          question("2f", "Traffic rises and the EC2 fleet should add instances. Which service adjusts the fleet?", "autoscaling", "alb", [0, 0, 20, 65, 0, 0, 100], "EC2 Auto Scaling changes the number of EC2 instances in a group.", "Scaling"),
+          question("2g", "A website needs a home for its image files. What stores the original objects?", "s3", "cloudfront", [0, 0, 70, 0, 0, 100, 0], "S3 stores the original files; CloudFront can deliver cached copies.", "Origin storage"),
+          question("2h", "An app needs subnets and network routing for its AWS resources. Start with what?", "vpc", "route53", [100, 20, 0, 20, 0, 0, 0], "A VPC is the virtual network where you define subnets and routing.", "Networking"),
+          question("2i", "Users should reach an app by its domain name. Which service provides DNS?", "route53", "alb", [0, 100, 20, 35, 20, 0, 0], "Route 53 can resolve the domain name to the application endpoint.", "Names"),
+          question("2j", "A busy site has enough servers but requests pile up at one target. What distributes them?", "alb", "autoscaling", [0, 0, 20, 100, 30, 0, 55], "An ALB routes requests among healthy application targets.", "Traffic")
         ]
       },
       {
@@ -74,7 +80,10 @@
           question("3d", "A game stores player profiles by ID using key-value access at scale. Pick the database.", "dynamodb", "rds", [10, 20, 70, 100, 45, 30, 0], "DynamoDB is a managed NoSQL database suited to key-value access patterns.", "Key-value data"),
           question("3e", "The same popular query is read again and again. What can cache its result in memory?", "elasticache", "dynamodb", [10, 20, 45, 60, 100, 20, 0], "ElastiCache is an in-memory cache that can reduce repeated reads from a primary database.", "Caching"),
           question("3f", "You need durable object copies of daily backup files. Where do the files go?", "s3", "glacier", [30, 35, 30, 25, 10, 100, 70], "S3 stores backup objects; an S3 Glacier class is a further choice when restores can wait.", "Backups"),
-          question("3g", "Backups will sit for years and slow retrieval is acceptable. Which class fits best?", "glacier", "s3", [25, 30, 20, 20, 5, 70, 100], "S3 Glacier Flexible Retrieval trades retrieval speed for archive-oriented storage.", "Archives")
+          question("3g", "Backups will sit for years and slow retrieval is acceptable. Which class fits best?", "glacier", "s3", [25, 30, 20, 20, 5, 70, 100], "S3 Glacier Flexible Retrieval trades retrieval speed for archive-oriented storage.", "Archives"),
+          question("3h", "A shopping app needs tables with relationships and SQL queries. Pick the managed database.", "rds", "dynamodb", [10, 20, 100, 40, 30, 10, 0], "RDS is a managed relational database choice for SQL data.", "SQL data"),
+          question("3i", "A game looks up a player's inventory by ID at high scale. Which NoSQL store fits?", "dynamodb", "rds", [10, 10, 65, 100, 40, 10, 0], "DynamoDB supports key-value and document access patterns.", "NoSQL access"),
+          question("3j", "Popular product data is read repeatedly. What helps reduce reads from the main database?", "elasticache", "rds", [0, 10, 65, 50, 100, 0, 0], "ElastiCache can keep frequently read data in memory.", "Caching")
         ]
       },
       {
@@ -88,7 +97,10 @@
           question("4d", "HTTP requests should be distributed across several application targets. Pick the router.", "alb", "apigateway", [50, 20, 60, 100, 65, 30, 20], "An Application Load Balancer spreads HTTP and HTTPS requests across healthy targets.", "Load balancing"),
           question("4e", "A team wants a managed front door for its API endpoints. Which service fits most directly?", "apigateway", "alb", [40, 65, 20, 70, 100, 20, 20], "API Gateway helps create and manage APIs; an ALB can route HTTP traffic but is a different tool.", "APIs"),
           question("4f", "You need metrics, logs, and alarms to see what your app is doing. Choose visibility.", "cloudwatch", "autoscaling", [25, 25, 35, 30, 25, 100, 20], "CloudWatch provides metrics, logs, and alarms for observing workloads.", "Monitoring"),
-          question("4g", "Your servers need a logically isolated AWS network. Which service defines it?", "vpc", "ec2", [35, 10, 20, 20, 20, 15, 100], "A VPC supplies the network boundary in which resources such as EC2 instances run.", "Network boundary")
+          question("4g", "Your servers need a logically isolated AWS network. Which service defines it?", "vpc", "ec2", [35, 10, 20, 20, 20, 15, 100], "A VPC supplies the network boundary in which resources such as EC2 instances run.", "Network boundary"),
+          question("4h", "A scheduled job runs briefly each day. Which service runs code without a server to manage?", "lambda", "ec2", [55, 100, 30, 10, 35, 10, 0], "Lambda suits short event-driven code; EC2 gives a server to manage.", "Short jobs"),
+          question("4i", "Errors are rising but you cannot see when. Which service provides logs and alarms?", "cloudwatch", "ec2", [20, 20, 20, 20, 20, 100, 0], "CloudWatch gathers logs and metrics and can raise alarms.", "Visibility"),
+          question("4j", "A web app needs more EC2 instances during busy hours and fewer later. Pick the fleet controller.", "autoscaling", "alb", [60, 30, 100, 65, 20, 35, 20], "EC2 Auto Scaling adjusts instance count; ALB spreads requests across targets.", "Capacity")
         ]
       },
       {
@@ -99,10 +111,13 @@
           question("5a", "Decide which application role may read an S3 bucket. What controls permissions?", "iam", "kms", [100, 40, 20, 10, 10, 5, 15], "IAM policies and roles control access to AWS resources; KMS concerns encryption keys.", "Permissions"),
           question("5b", "Your app needs managed keys for a supported encryption workflow. Choose the key service.", "kms", "iam", [50, 100, 15, 10, 10, 20, 20], "KMS manages encryption keys; IAM controls who can use them.", "Encryption keys"),
           question("5c", "A public web app needs rules to filter suspicious HTTP requests. Choose the filter.", "waf", "cloudwatch", [15, 15, 100, 10, 30, 5, 35], "AWS WAF inspects web requests and applies rules to supported resources.", "Web protection"),
-          question("5d", "Run a short function when a new event arrives, without managing a server. Choose compute.", "lambda", "apigateway", [10, 10, 10, 100, 65, 25, 20], "Lambda runs code in response to events; API Gateway can be one way to invoke it through an API.", "Serverless compute"),
+          question("5d", "An API request should run code without a server to manage. Which service runs the code?", "lambda", "apigateway", [10, 10, 10, 100, 65, 25, 20], "Lambda runs the code; API Gateway can receive the request and invoke it.", "Serverless compute", "apigateway"),
           question("5e", "Expose and manage an API for a mobile app. Which service is the API front door?", "apigateway", "lambda", [20, 10, 30, 65, 100, 30, 25], "API Gateway manages API endpoints; Lambda may run code behind them.", "API front door"),
           question("5f", "Store player settings by user ID in a managed NoSQL database. Choose the store.", "dynamodb", "apigateway", [10, 15, 10, 30, 35, 100, 20], "DynamoDB stores key-value or document data; API Gateway only exposes an API.", "NoSQL storage"),
-          question("5g", "Watch error metrics and set an alarm when they rise. Which service observes them?", "cloudwatch", "waf", [20, 15, 35, 20, 20, 30, 100], "CloudWatch collects metrics and can trigger alarms; WAF filters web requests.", "Alarms")
+          question("5g", "Watch error metrics and set an alarm when they rise. Which service observes them?", "cloudwatch", "waf", [20, 15, 35, 20, 20, 30, 100], "CloudWatch collects metrics and can trigger alarms; WAF filters web requests.", "Alarms"),
+          question("5h", "A role must be allowed to call a protected AWS API. Which service grants permission?", "iam", "apigateway", [100, 30, 10, 10, 40, 10, 10], "IAM policies determine permissions for AWS identities and roles.", "Authorization"),
+          question("5i", "Security wants to control the encryption keys used by an AWS workload. Choose the key manager.", "kms", "iam", [50, 100, 10, 0, 0, 10, 10], "KMS manages keys used by supported AWS encryption workflows.", "Encryption"),
+          question("5j", "A web endpoint is flooded with suspicious HTTP requests. Which service filters those requests?", "waf", "cloudwatch", [10, 10, 100, 0, 40, 0, 35], "AWS WAF applies rules to web requests reaching supported resources.", "Web traffic")
         ]
       },
       {
@@ -113,10 +128,13 @@
           question("6a", "A global audience needs site images cached near viewers. Pick the edge service.", "cloudfront", "s3", [100, 55, 35, 25, 70, 15, 20], "CloudFront uses edge locations for lower-latency delivery; S3 can hold the original images.", "Global delivery"),
           question("6b", "A domain name must resolve to the site's endpoint. Which AWS service handles DNS?", "route53", "cloudfront", [45, 100, 25, 10, 30, 20, 10], "Route 53 is DNS; CloudFront is a content-delivery endpoint it can point to.", "DNS routing"),
           question("6c", "Web requests need spreading across multiple healthy application targets. Choose the balancer.", "alb", "autoscaling", [35, 20, 100, 65, 20, 35, 45], "An ALB routes HTTP and HTTPS requests among targets; Auto Scaling adjusts instance count.", "Traffic distribution"),
-          question("6d", "Traffic rises and the EC2 fleet must add instances. Which service changes fleet size?", "autoscaling", "alb", [25, 20, 65, 100, 20, 35, 30], "EC2 Auto Scaling adds or removes instances; an ALB can distribute requests across them.", "Fleet capacity"),
+          question("6d", "Traffic rises and the EC2 fleet must add instances. Which service changes fleet size?", "autoscaling", "alb", [25, 20, 65, 100, 20, 35, 30], "EC2 Auto Scaling adds or removes instances; an ALB can distribute requests across them.", "Fleet capacity", "alb"),
           question("6e", "Static site files need durable object storage as a CloudFront origin. Pick the store.", "s3", "cloudfront", [70, 25, 20, 10, 100, 15, 10], "S3 stores the static objects; CloudFront can deliver them to visitors.", "Static content"),
           question("6f", "Place app resources in a logically isolated network with subnets. Choose the network.", "vpc", "autoscaling", [20, 20, 35, 40, 20, 100, 25], "A VPC defines the virtual network and its subnets; scaling only changes instance count.", "Virtual network"),
-          question("6g", "Filter unwanted HTTP requests before they reach the web app. Pick the web firewall.", "waf", "alb", [25, 15, 45, 20, 10, 30, 100], "AWS WAF applies web-request rules; an ALB mainly distributes application traffic.", "Web filtering")
+          question("6g", "Filter unwanted HTTP requests before they reach the web app. Pick the web firewall.", "waf", "alb", [25, 15, 45, 20, 10, 30, 100], "AWS WAF applies web-request rules; an ALB mainly distributes application traffic.", "Web filtering"),
+          question("6h", "A growing EC2 group needs requests shared among healthy web targets. What routes the requests?", "alb", "autoscaling", [30, 20, 100, 70, 20, 20, 20], "An ALB distributes application requests; Auto Scaling controls instance count.", "Resilience"),
+          question("6i", "A marketing page serves the same images worldwide. Which service caches them near users?", "cloudfront", "s3", [100, 30, 20, 10, 70, 10, 0], "CloudFront can cache copies at edge locations near viewers.", "Edge caching"),
+          question("6j", "The app's domain must resolve to its public endpoint. Choose the DNS service.", "route53", "cloudfront", [45, 100, 20, 10, 20, 0, 0], "Route 53 provides DNS for domain names and endpoints.", "DNS")
         ]
       }
     ]

@@ -29,4 +29,4 @@ When the event account provides CLI credentials and the bucket is ready, install
 
 ## Deployment check
 
-After upload, verify that the title screen loads, all CSS and script files load from their folders, all six seven-question duels run, progress survives a page refresh, sound can be muted, and no browser console errors appear. The same files should also work when `index.html` is opened locally.
+After upload, verify that the title screen loads, all CSS and script files load from their folders, each battle continues until seven hits or zero player HP, timed alerts and dodge phases work, progress survives a page refresh, sound can be muted, and no browser console errors appear. The same files should also work when `index.html` is opened locally.
